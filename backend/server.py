@@ -1595,11 +1595,7 @@ async def delete_conversation(conversation_id: str):
 # ============================================================================
 
 @app.get("/api/messages")
-async def get_messages(
-    conversation_id: str,
-    limit: Optional[int] = None,
-    offset: int = 0
-):
+async def get_messages(conversation_id: str, limit: Optional[int] = None, offset: int = 0):
     """Get all messages for a conversation"""
     return await message_manager.get_messages(conversation_id, limit=limit, offset=offset)
 
@@ -1646,6 +1642,7 @@ if __name__ == "__main__":
         port=8000,
         log_level="info"
     )
+
 
 
 
