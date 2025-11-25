@@ -43,13 +43,13 @@ from boson_multimodal.data_types import ChatMLSample, Message
 from boson_multimodal.model.higgs_audio.utils import revert_delay_pattern
 
 # Supabase managers
-from app.backend.character_manager import (
+from character_manager import (
     CharacterManager,
     Character as DbCharacter,
     CharacterCreate,
     CharacterUpdate
 )
-from app.backend.voice_manager import (
+from voice_manager import (
     VoiceManager,
     Voice as DbVoice,
     VoiceCreate,
@@ -1465,3 +1465,4 @@ if __name__ == "__main__":
         port=8000,
         log_level="info"
     )
+
