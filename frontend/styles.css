@@ -23,13 +23,6 @@
   --input-border: #404040;
 }
 
-/* ===== Base Styles ===== */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
   height: 100vh;
   width: 100vw;
@@ -50,7 +43,7 @@ body {
 }
 
 .main {
-  background: var(--bg-dark);
+  background: #191b1f;
   border: 1px solid #333333;
   border-radius: 20px;
   overflow: hidden;
@@ -63,8 +56,8 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 2rem;
-  background: var(--bg-darker);
+  margin: 2rem;
+  background: #1c1e22;
 }
 
 /* ===== Sidebar ===== */
