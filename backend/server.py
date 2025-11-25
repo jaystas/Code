@@ -161,7 +161,7 @@ class ConversationMessage:
     role: str                   # "user", "assistant", "system"
     content: str
     character_id: Optional[str] = None
-    character_name: Optional[str] = None
+    name: Optional[str] = None  # Speaker name (User, or character name)
     timestamp: float = field(default_factory=time.time)
 
 @dataclass
@@ -185,7 +185,7 @@ class ConversationContext:
             role="user",
             content=text,
             character_id=None,
-            character_name="User"
+            name="User"
         ))
 
     def add_character_message(self, character: Character, text: str):
@@ -194,7 +194,7 @@ class ConversationContext:
             role="assistant",
             content=text,
             character_id=character.id,
-            character_name=character.name
+            name=character.name
         ))
 
 # ============================================================================
@@ -416,10 +416,14 @@ class CharacterService:
 
         # Add conversation history
         for msg in conversation_history:
-            messages.append({
+            message_dict = {
                 "role": msg.role,
                 "content": msg.content
-            })
+            }
+            # Add name field if available (for multi-character conversations)
+            if msg.name:
+                message_dict["name"] = msg.name
+            messages.append(message_dict)
 
         # Add instruction for this turn
         instruction = (
@@ -1266,7 +1270,7 @@ class VoiceChatOrchestrator:
                         role=msg.role,
                         content=msg.content,
                         character_id=msg.character_id,
-                        character_name=msg.name,
+                        name=msg.name,
                         timestamp=time.time()  # Use current time for loaded messages
                     ))
 
