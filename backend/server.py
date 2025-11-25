@@ -33,9 +33,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai import AsyncOpenAI
 from supabase import create_client, Client
 
-# Add project paths
-sys.path.append('/home/user/aiChat')
-
 # Import existing components
 from RealtimeSTT import AudioToTextRecorder
 from boson_multimodal.serve.serve_engine import HiggsAudioServeEngine
@@ -1465,4 +1462,5 @@ if __name__ == "__main__":
         port=8000,
         log_level="info"
     )
+
 
