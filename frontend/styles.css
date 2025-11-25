@@ -58,6 +58,25 @@ body {
   overflow-x: hidden;
   margin: 2rem;
   background: #1c1e22;
+  transition: opacity 0.15s ease;
+}
+
+/* Page Content Styles */
+.page-content {
+  padding: 2rem;
+}
+
+.page-content h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.page-content p {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 /* ===== Sidebar ===== */
