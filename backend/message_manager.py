@@ -196,6 +196,38 @@ class MessageManager:
             logger.error(f"Error getting recent messages for conversation {conversation_id}: {e}")
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+        async def get_last_message(self, conversation_id: str, n: int = 1) -> Message:
+        """Get the last message from a conversation"""
+        try:
+            response = self.supabase.table(self.table_name)\
+                .select("*")\
+                .eq("conversation_id", conversation_id)\
+                .order("created_at", desc=True)\
+                .limit(n)\
+                .execute()
+
+            # Reverse to get chronological order
+            messages = []
+            for row in reversed(response.data):
+                message = Message(
+                    message_id=str(row["message_id"]),
+                    conversation_id=str(row["conversation_id"]),
+                    role=row["role"],
+                    name=row.get("name"),
+                    content=row["content"],
+                    character_id=row.get("character_id"),
+                    created_at=row.get("created_at"),
+                    updated_at=row.get("updated_at")
+                )
+                messages.append(message)
+
+            logger.info(f"Retrieved last {len(messages)} messages for conversation {conversation_id}")
+            return messages
+
+        except Exception as e:
+            logger.error(f"Error getting recent messages for conversation {conversation_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     async def get_message_count(self, conversation_id: str) -> int:
         """Get the total number of messages in a conversation"""
         try:
