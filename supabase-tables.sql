@@ -22,7 +22,6 @@ create trigger update_characters_updated_at BEFORE
 update on characters for EACH row
 execute FUNCTION update_updated_at_column ();
 
-
 create table public.conversations (
   conversation_id uuid not null default extensions.uuid_generate_v4 (),
   title text null,
@@ -35,7 +34,6 @@ create table public.conversations (
 create trigger update_conversations_updated_at BEFORE
 update on conversations for EACH row
 execute FUNCTION update_updated_at_column ();
-
 
 create table public.messages (
   message_id uuid not null default extensions.uuid_generate_v4 (),
@@ -61,7 +59,6 @@ create trigger update_messages_updated_at BEFORE
 update on messages for EACH row
 execute FUNCTION update_updated_at_column ();
 
-
 create table public.voices (
   voice text not null,
   method text null,
@@ -77,4 +74,17 @@ create table public.voices (
 
 create trigger update_voices_updated_at BEFORE
 update on voices for EACH row
+execute FUNCTION update_updated_at_column ();
+
+create table public.conversations (
+  conversation_id uuid not null default extensions.uuid_generate_v4 (),
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  title text null,
+  active_characters jsonb[] null,
+  constraint conversations_pkey primary key (conversation_id)
+) TABLESPACE pg_default;
+
+create trigger update_conversations_updated_at BEFORE
+update on conversations for EACH row
 execute FUNCTION update_updated_at_column ();
