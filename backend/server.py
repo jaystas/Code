@@ -757,19 +757,21 @@ class LLMOrchestrator:
                 )
                 await self.queues.tts_requests.put(tts_request)
 
-            # Extract clean response and add to history
+            # Extract clean response for TTS/UI, but save raw response with tags to history
             clean_response = self.character_service.extract_character_response(
                 raw_response,
                 character
             )
-            context.add_character_message(character, clean_response)
 
-            # Save character message to database
+            # Add raw response (with character tags) to history
+            context.add_character_message(character, raw_response)
+
+            # Save raw response (with character tags) to database
             try:
                 await message_manager.create_message(MessageCreate(
                     conversation_id=context.conversation_id,
                     role="assistant",
-                    content=clean_response,
+                    content=raw_response,
                     name=character.name,
                     character_id=character.id
                 ))
@@ -1592,7 +1594,7 @@ async def delete_conversation(conversation_id: str):
 # MESSAGE ENDPOINTS
 # ============================================================================
 
-@app.get("/api/conversations/{conversation_id}/messages")
+@app.get("/api/messages")
 async def get_messages(
     conversation_id: str,
     limit: Optional[int] = None,
@@ -1601,24 +1603,19 @@ async def get_messages(
     """Get all messages for a conversation"""
     return await message_manager.get_messages(conversation_id, limit=limit, offset=offset)
 
-@app.get("/api/conversations/{conversation_id}/messages/recent")
+@app.get("/api/messages/recent")
 async def get_recent_messages(conversation_id: str, n: int = 10):
     """Get the last N messages from a conversation"""
     return await message_manager.get_recent_messages(conversation_id, n=n)
 
-@app.post("/api/conversations/{conversation_id}/messages")
-async def create_message(conversation_id: str, message_data: MessageCreate):
+@app.post("/api/messages")
+async def create_message(message_data: MessageCreate):
     """Create a single message in a conversation"""
-    # Ensure conversation_id matches
-    message_data.conversation_id = conversation_id
     return await message_manager.create_message(message_data)
 
-@app.post("/api/conversations/{conversation_id}/messages/batch")
-async def create_messages_batch(conversation_id: str, messages: List[MessageCreate]):
+@app.post("/api/messages/batch")
+async def create_messages_batch(messages: List[MessageCreate]):
     """Create multiple messages in a batch"""
-    # Ensure all messages have the correct conversation_id
-    for msg in messages:
-        msg.conversation_id = conversation_id
     return await message_manager.create_messages_batch(messages)
 
 # ============================================================================
