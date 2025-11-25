@@ -23,6 +23,20 @@ update on characters for EACH row
 execute FUNCTION update_updated_at_column ();
 
 
+create table public.conversations (
+  conversation_id uuid not null default extensions.uuid_generate_v4 (),
+  title text null,
+  active_characters jsonb null default '[]'::jsonb,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint conversations_pkey primary key (conversation_id)
+) TABLESPACE pg_default;
+
+create trigger update_conversations_updated_at BEFORE
+update on conversations for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
 create table public.messages (
   message_id uuid not null default extensions.uuid_generate_v4 (),
   conversation_id uuid not null,

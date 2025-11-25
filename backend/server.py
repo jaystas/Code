@@ -52,6 +52,17 @@ from voice_manager import (
     VoiceCreate,
     VoiceUpdate
 )
+from conversation_manager import (
+    ConversationManager,
+    Conversation as DbConversation,
+    ConversationCreate,
+    ConversationUpdate
+)
+from message_manager import (
+    MessageManager,
+    Message as DbMessage,
+    MessageCreate
+)
 
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://jslevsbvapopncjehhva.supabase.co")
@@ -62,6 +73,8 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 # Initialize managers
 character_manager = CharacterManager(supabase)
 voice_manager = VoiceManager(supabase)
+conversation_manager = ConversationManager(supabase)
+message_manager = MessageManager(supabase)
 
 # ============================================================================
 # DATA MODELS
@@ -580,6 +593,25 @@ class LLMOrchestrator:
                 context.user_input = transcription.text
                 context.add_user_message(transcription.text)
 
+                # Save user message to database
+                try:
+                    await message_manager.create_message(MessageCreate(
+                        conversation_id=context.conversation_id,
+                        role="user",
+                        content=transcription.text,
+                        name="User",
+                        character_id=None
+                    ))
+
+                    # Auto-update conversation title from first message if needed
+                    if len(context.history) == 1:  # First message
+                        await conversation_manager.auto_update_title_from_first_message(
+                            context.conversation_id,
+                            transcription.text
+                        )
+                except Exception as e:
+                    print(f"Error saving user message: {e}")
+
                 # Determine response queue (who responds)
                 response_queue = self.character_service.parse_character_mentions(
                     transcription.text,
@@ -727,6 +759,18 @@ class LLMOrchestrator:
                 character
             )
             context.add_character_message(character, clean_response)
+
+            # Save character message to database
+            try:
+                await message_manager.create_message(MessageCreate(
+                    conversation_id=context.conversation_id,
+                    role="assistant",
+                    content=clean_response,
+                    name=character.name,
+                    character_id=character.id
+                ))
+            except Exception as e:
+                print(f"Error saving character message: {e}")
 
             print(f"✓ {character.name} text generation complete")
 
@@ -1190,19 +1234,86 @@ class VoiceChatOrchestrator:
 
         print("✓ All services stopped")
 
-    async def handle_websocket(self, websocket: WebSocket):
-        """Handle WebSocket connection for audio I/O"""
+    async def handle_websocket(
+        self,
+        websocket: WebSocket,
+        conversation_id: Optional[str] = None,
+        character_ids: Optional[List[str]] = None
+    ):
+        """Handle WebSocket connection for audio I/O with conversation persistence"""
         await websocket.accept()
         print("WebSocket connection accepted")
 
+        # Determine conversation ID (load existing or create new)
+        if conversation_id:
+            # Load existing conversation
+            try:
+                conversation = await conversation_manager.get_conversation(conversation_id)
+                print(f"Loaded existing conversation: {conversation_id}")
+
+                # Use conversation's active characters if character_ids not provided
+                if not character_ids:
+                    character_ids = conversation.active_characters
+
+                # Load message history
+                messages = await message_manager.get_messages(conversation_id)
+                print(f"Loaded {len(messages)} messages from history")
+
+                # Convert DB messages to ConversationMessage format
+                history = []
+                for msg in messages:
+                    history.append(ConversationMessage(
+                        role=msg.role,
+                        content=msg.content,
+                        character_id=msg.character_id,
+                        character_name=msg.name,
+                        timestamp=time.time()  # Use current time for loaded messages
+                    ))
+
+            except HTTPException as e:
+                if e.status_code == 404:
+                    print(f"Conversation {conversation_id} not found, creating new one")
+                    conversation = None
+                    history = []
+                else:
+                    raise
+        else:
+            conversation = None
+            history = []
+
+        # Get character IDs (use active characters if not specified)
+        if not character_ids:
+            # Default to active characters
+            active_chars = await character_manager.get_active_characters()
+            character_ids = [c.id for c in active_chars[:2]]  # Default to first 2 active
+            print(f"Using active characters: {character_ids}")
+
+        # Create or update conversation in database
+        if not conversation:
+            conversation = await conversation_manager.create_conversation(
+                ConversationCreate(
+                    title=None,  # Will be auto-generated from first message
+                    active_characters=character_ids
+                )
+            )
+            conversation_id = conversation.conversation_id
+            print(f"Created new conversation: {conversation_id}")
+        else:
+            # Update active characters if they changed
+            if character_ids != conversation.active_characters:
+                conversation = await conversation_manager.update_active_characters(
+                    conversation_id,
+                    character_ids
+                )
+                print(f"Updated active characters: {character_ids}")
+
         # Create conversation context
-        # TODO: Get character IDs from query params or session
-        character_ids = ["char-001", "char-002"]  # Example
         self.context = ConversationContext(
-            conversation_id=str(uuid.uuid4()),
+            conversation_id=conversation_id,
             active_characters=await self.character_service.load_active_characters(
                 character_ids
-            )
+            ),
+            history=history
         )
 
         # Set context for STT
@@ -1312,10 +1423,30 @@ CONFIG = {
 }
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket endpoint for voice chat"""
+async def websocket_endpoint(
+    websocket: WebSocket,
+    conversation_id: Optional[str] = None,
+    character_ids: Optional[str] = None
+):
+    """
+    WebSocket endpoint for voice chat
+
+    Query Parameters:
+    - conversation_id (optional): UUID of existing conversation to resume
+    - character_ids (optional): Comma-separated list of character IDs (e.g., "char-001,char-002")
+    """
     orchestrator = VoiceChatOrchestrator(CONFIG)
-    await orchestrator.handle_websocket(websocket)
+
+    # Parse character IDs if provided
+    parsed_character_ids = None
+    if character_ids:
+        parsed_character_ids = [cid.strip() for cid in character_ids.split(",")]
+
+    await orchestrator.handle_websocket(
+        websocket,
+        conversation_id=conversation_id,
+        character_ids=parsed_character_ids
+    )
 
 @app.get("/")
 async def root():
@@ -1409,35 +1540,82 @@ async def delete_voice(voice: str):
     return {"success": success, "message": f"Voice {voice} deleted"}
 
 # ============================================================================
-# CONVERSATION HISTORY ENDPOINTS
+# CONVERSATION ENDPOINTS
 # ============================================================================
 
-# Note: Conversation history requires additional database tables and models
-# This is a placeholder for future implementation
-
 @app.get("/api/conversations")
-async def get_conversations():
-    """Get all conversations (placeholder)"""
-    # TODO: Implement conversation history retrieval from Supabase
-    return {"message": "Conversation history not yet implemented"}
+async def get_conversations(limit: Optional[int] = None, offset: int = 0):
+    """Get all conversations ordered by most recent first"""
+    return await conversation_manager.get_all_conversations(limit=limit, offset=offset)
 
 @app.get("/api/conversations/{conversation_id}")
 async def get_conversation(conversation_id: str):
-    """Get a specific conversation by ID (placeholder)"""
-    # TODO: Implement conversation retrieval from Supabase
-    return {"message": "Conversation history not yet implemented", "conversation_id": conversation_id}
+    """Get a specific conversation by ID with its metadata"""
+    return await conversation_manager.get_conversation(conversation_id)
 
 @app.post("/api/conversations")
-async def create_conversation(conversation_data: dict):
-    """Create a new conversation (placeholder)"""
-    # TODO: Implement conversation creation in Supabase
-    return {"message": "Conversation creation not yet implemented"}
+async def create_conversation(conversation_data: ConversationCreate):
+    """Create a new conversation"""
+    return await conversation_manager.create_conversation(conversation_data)
+
+@app.put("/api/conversations/{conversation_id}")
+async def update_conversation(conversation_id: str, conversation_data: ConversationUpdate):
+    """Update conversation metadata (title, active_characters)"""
+    return await conversation_manager.update_conversation(conversation_id, conversation_data)
+
+@app.put("/api/conversations/{conversation_id}/characters")
+async def update_conversation_characters(conversation_id: str, character_ids: List[str]):
+    """Update the active characters in a conversation"""
+    return await conversation_manager.update_active_characters(conversation_id, character_ids)
+
+@app.post("/api/conversations/{conversation_id}/characters/{character_id}")
+async def add_character_to_conversation(conversation_id: str, character_id: str):
+    """Add a character to a conversation"""
+    return await conversation_manager.add_character(conversation_id, character_id)
+
+@app.delete("/api/conversations/{conversation_id}/characters/{character_id}")
+async def remove_character_from_conversation(conversation_id: str, character_id: str):
+    """Remove a character from a conversation"""
+    return await conversation_manager.remove_character(conversation_id, character_id)
 
 @app.delete("/api/conversations/{conversation_id}")
 async def delete_conversation(conversation_id: str):
-    """Delete a conversation (placeholder)"""
-    # TODO: Implement conversation deletion from Supabase
-    return {"message": "Conversation deletion not yet implemented", "conversation_id": conversation_id}
+    """Delete a conversation and all its messages"""
+    await conversation_manager.delete_conversation(conversation_id)
+    return {"message": "Conversation deleted successfully"}
+
+# ============================================================================
+# MESSAGE ENDPOINTS
+# ============================================================================
+
+@app.get("/api/conversations/{conversation_id}/messages")
+async def get_messages(
+    conversation_id: str,
+    limit: Optional[int] = None,
+    offset: int = 0
+):
+    """Get all messages for a conversation"""
+    return await message_manager.get_messages(conversation_id, limit=limit, offset=offset)
+
+@app.get("/api/conversations/{conversation_id}/messages/recent")
+async def get_recent_messages(conversation_id: str, n: int = 10):
+    """Get the last N messages from a conversation"""
+    return await message_manager.get_recent_messages(conversation_id, n=n)
+
+@app.post("/api/conversations/{conversation_id}/messages")
+async def create_message(conversation_id: str, message_data: MessageCreate):
+    """Create a single message in a conversation"""
+    # Ensure conversation_id matches
+    message_data.conversation_id = conversation_id
+    return await message_manager.create_message(message_data)
+
+@app.post("/api/conversations/{conversation_id}/messages/batch")
+async def create_messages_batch(conversation_id: str, messages: List[MessageCreate]):
+    """Create multiple messages in a batch"""
+    # Ensure all messages have the correct conversation_id
+    for msg in messages:
+        msg.conversation_id = conversation_id
+    return await message_manager.create_messages_batch(messages)
 
 # ============================================================================
 # MAIN
