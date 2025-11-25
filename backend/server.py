@@ -1608,6 +1608,11 @@ async def get_recent_messages(conversation_id: str, n: int = 10):
     """Get the last N messages from a conversation"""
     return await message_manager.get_recent_messages(conversation_id, n=n)
 
+@app.get("/api/messages/last")
+async def get_last_message(conversation_id: str, n: int = 1):
+    """Get the last message from a conversation"""
+    return await message_manager.get_last_message(conversation_id, n=n)
+
 @app.post("/api/messages")
 async def create_message(message_data: MessageCreate):
     """Create a single message in a conversation"""
@@ -1641,5 +1646,6 @@ if __name__ == "__main__":
         port=8000,
         log_level="info"
     )
+
 
 
