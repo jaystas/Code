@@ -64,6 +64,10 @@ body {
 /* Page Content Styles */
 .page-content {
   padding: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 2.5fr 1fr;
+  gap: 1.5rem;
+  height: 100%;
 }
 
 .page-content h1 {
@@ -77,6 +81,45 @@ body {
   font-size: 1rem;
   color: var(--muted);
   line-height: 1.6;
+}
+
+/* ===== Three Column Layout ===== */
+.info-column {
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.chat-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.settings-column {
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* ===== Chat Column Areas ===== */
+.messages-area {
+  flex: 1;
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.editor-area {
+  flex-shrink: 0;
 }
 
 /* ===== Sidebar ===== */

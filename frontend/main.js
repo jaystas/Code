@@ -119,61 +119,84 @@ function loadPage(page, container) {
   const pageContent = {
     home: `
       <div class="page-content">
-        <div class="editor-container">
-          <div class="toolbar" id="toolbar">
-            <!-- Toolbar buttons will be dynamically added by editor.js -->
+        <!-- Info Column (Left) -->
+        <div class="info-column">
+          <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">Info</h2>
+          <p style="color: var(--muted); font-size: 0.9rem;">Model information and settings will appear here.</p>
+        </div>
+
+        <!-- Chat Column (Center) -->
+        <div class="chat-column">
+          <!-- Messages Area -->
+          <div class="messages-area">
+            <p style="color: var(--muted); text-align: center; margin-top: 2rem;">Your conversation will appear here...</p>
           </div>
 
-          <div class="editor-content">
-            <div id="editor"></div>
-          </div>
+          <!-- Editor Area -->
+          <div class="editor-area">
+            <div class="editor-container">
+              <div class="toolbar" id="toolbar">
+                <!-- Toolbar buttons will be dynamically added by editor.js -->
+              </div>
 
-          <div class="editor-footer">
-            <button class="mic-button" onclick="handleMic()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </button>
-            <button class="send-button" onclick="handleSend()">Send</button>
+              <div class="editor-content">
+                <div id="editor"></div>
+              </div>
+
+              <div class="editor-footer">
+                <button class="mic-button" onclick="handleMic()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                  </svg>
+                </button>
+                <button class="send-button" onclick="handleSend()">Send</button>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- Settings Column (Right) -->
+        <div class="settings-column">
+          <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">Settings</h2>
+          <p style="color: var(--muted); font-size: 0.9rem;">Chat settings and controls will appear here.</p>
         </div>
       </div>
     `,
     models: `
-      <div class="page-content">
+      <div class="page-content" style="display: block;">
         <h1>Models</h1>
         <p>Manage your AI models here</p>
       </div>
     `,
     chats: `
-      <div class="page-content">
+      <div class="page-content" style="display: block;">
         <h1>Chats</h1>
         <p>View and manage your chat history</p>
       </div>
     `,
     characters: `
-      <div class="page-content">
+      <div class="page-content" style="display: block;">
         <h1>Characters</h1>
         <p>Create and customize AI characters</p>
       </div>
     `,
     agents: `
-      <div class="page-content">
+      <div class="page-content" style="display: block;">
         <h1>Agents</h1>
         <p>Configure your AI agents</p>
       </div>
     `,
     speech: `
-      <div class="page-content">
+      <div class="page-content" style="display: block;">
         <h1>Speech</h1>
         <p>Voice and speech settings</p>
       </div>
     `,
     settings: `
-      <div class="page-content">
+      <div class="page-content" style="display: block;">
         <h1>Settings</h1>
         <p>Application settings and preferences</p>
       </div>
