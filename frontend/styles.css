@@ -101,43 +101,6 @@ body {
 }
 
 /* ===== Settings Drawer ===== */
-.drawer-toggle {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  background: var(--bg-darker);
-  border: 1px solid var(--border);
-  border-radius: 8px 0 0 8px;
-  padding: 8px 6px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.settings-column:hover .drawer-toggle {
-  opacity: 1;
-}
-
-.drawer-toggle.active {
-  opacity: 1;
-}
-
-.drawer-toggle svg {
-  display: block;
-  transition: transform 0.3s ease;
-  width: 24px;
-  height: 24px;
-}
-
-.drawer-toggle.active svg {
-  transform: rotate(180deg);
-}
-
 .settings-drawer {
   position: fixed;
   top: calc(10px + 2rem);
@@ -156,6 +119,43 @@ body {
 
 .settings-drawer.open {
   transform: translateX(0);
+}
+
+.drawer-toggle {
+  position: absolute;
+  left: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 8px 0 0 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-drawer:hover .drawer-toggle {
+  opacity: 1;
+}
+
+.drawer-toggle.active {
+  opacity: 1;
+}
+
+.drawer-toggle svg {
+  display: block;
+  transition: transform 0.3s ease;
+  width: 24px;
+  height: 24px;
+}
+
+.drawer-toggle.active svg {
+  transform: rotate(180deg);
 }
 
 /* ===== Chat Column Areas ===== */
