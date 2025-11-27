@@ -166,7 +166,6 @@ function loadPage(page, container) {
       </div>
 
       <!-- Settings Drawer (offscreen) -->
-      <div class="drawer-overlay" id="drawer-overlay"></div>
       <div class="settings-drawer" id="settings-drawer">
         <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text);">Settings</h2>
         <p style="color: var(--muted);">Settings content will go here...</p>
@@ -242,9 +241,8 @@ function loadPage(page, container) {
 function initDrawer() {
   const drawerToggle = document.getElementById('drawer-toggle');
   const drawer = document.getElementById('settings-drawer');
-  const overlay = document.getElementById('drawer-overlay');
 
-  if (!drawerToggle || !drawer || !overlay) {
+  if (!drawerToggle || !drawer) {
     return;
   }
 
@@ -253,26 +251,11 @@ function initDrawer() {
     const isOpen = drawer.classList.contains('open');
 
     if (isOpen) {
-      closeDrawer();
+      drawer.classList.remove('open');
+      drawerToggle.classList.remove('active');
     } else {
-      openDrawer();
+      drawer.classList.add('open');
+      drawerToggle.classList.add('active');
     }
   });
-
-  // Close drawer when clicking overlay
-  overlay.addEventListener('click', () => {
-    closeDrawer();
-  });
-
-  function openDrawer() {
-    drawer.classList.add('open');
-    overlay.classList.add('active');
-    drawerToggle.classList.add('active');
-  }
-
-  function closeDrawer() {
-    drawer.classList.remove('open');
-    overlay.classList.remove('active');
-    drawerToggle.classList.remove('active');
-  }
 }
