@@ -62,6 +62,29 @@ function setupEventListeners() {
     newCharBtn.addEventListener('click', openNewCharacterModal);
   }
 
+  // Search field
+  const searchInput = document.getElementById('characterSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', handleSearch);
+  }
+
+  // Scroll buttons
+  const scrollUpBtn = document.getElementById('scrollUpBtn');
+  const scrollDownBtn = document.getElementById('scrollDownBtn');
+  const carousel = document.getElementById('characterCarousel');
+
+  if (scrollUpBtn && carousel) {
+    scrollUpBtn.addEventListener('click', () => {
+      carousel.scrollBy({ top: -200, behavior: 'smooth' });
+    });
+  }
+
+  if (scrollDownBtn && carousel) {
+    scrollDownBtn.addEventListener('click', () => {
+      carousel.scrollBy({ top: 200, behavior: 'smooth' });
+    });
+  }
+
   // Close button
   const closeBtn = document.getElementById('closeBtn');
   if (closeBtn) {
@@ -547,6 +570,29 @@ function renderCharacterList() {
     });
 
     carousel.appendChild(item);
+  });
+}
+
+/**
+ * Handle search functionality
+ */
+function handleSearch(e) {
+  const searchTerm = e.target.value.toLowerCase().trim();
+  const carouselItems = document.querySelectorAll('.character-carousel-item');
+
+  carouselItems.forEach(item => {
+    const characterId = item.dataset.characterId;
+    const character = characters.find(c => c.id === characterId);
+
+    if (!character) return;
+
+    const matchesSearch = character.name.toLowerCase().includes(searchTerm);
+
+    if (matchesSearch || searchTerm === '') {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+    }
   });
 }
 

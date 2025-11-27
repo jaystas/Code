@@ -187,6 +187,7 @@ function loadPage(page, container) {
       <div class="characters-page-wrapper">
         <!-- Character Info Column (Left) -->
         <div class="character-info-column">
+          <input type="text" class="character-search" id="characterSearch" placeholder="Search">
           <button class="new-character-btn" id="newCharacterBtn" aria-label="Create new character">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -348,10 +349,19 @@ function loadPage(page, container) {
 
         <!-- Character List Column (Right) -->
         <div class="character-list-column">
-          <h3 class="character-list-title">Characters</h3>
+          <button class="carousel-scroll-btn" id="scrollUpBtn" aria-label="Scroll up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 15l-6-6-6 6"/>
+            </svg>
+          </button>
           <div class="character-carousel" id="characterCarousel">
             <!-- Character items will be dynamically added here -->
           </div>
+          <button class="carousel-scroll-btn" id="scrollDownBtn" aria-label="Scroll down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
         </div>
       </div>
     `,
