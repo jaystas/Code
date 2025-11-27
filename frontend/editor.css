@@ -126,6 +126,7 @@
   padding: 16px;
   background-color: #1c1e22;
   color: #e0e0e0;
+  overflow-y: auto;
 }
 
 .ProseMirror {
