@@ -121,16 +121,16 @@
 
 /* ===== Editor Content Styles ===== */
 .editor-content {
-  min-height: 100px;
-  height: 300px;
-  padding: 24px;
+  min-height: 80px;
+  height: 150px;
+  padding: 16px;
   background-color: #1c1e22;
   color: #e0e0e0;
 }
 
 .ProseMirror {
   outline: none;
-  min-height: 400px;
+  min-height: 120px;
 }
 
 .ProseMirror p {
