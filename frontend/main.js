@@ -121,15 +121,12 @@ function loadPage(page, container) {
       <div class="page-content">
         <!-- Info Column (Left) -->
         <div class="info-column">
-          <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">Info</h2>
-          <p style="color: var(--muted); font-size: 0.9rem;">Model information and settings will appear here.</p>
         </div>
 
         <!-- Chat Column (Center) -->
         <div class="chat-column">
           <!-- Messages Area -->
           <div class="messages-area">
-            <p style="color: var(--muted); text-align: center; margin-top: 2rem;">Your conversation will appear here...</p>
           </div>
 
           <!-- Editor Area -->
@@ -160,8 +157,6 @@ function loadPage(page, container) {
 
         <!-- Settings Column (Right) -->
         <div class="settings-column">
-          <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text);">Settings</h2>
-          <p style="color: var(--muted); font-size: 0.9rem;">Chat settings and controls will appear here.</p>
         </div>
       </div>
     `,

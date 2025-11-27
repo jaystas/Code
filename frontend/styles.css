@@ -85,10 +85,6 @@ body {
 
 /* ===== Three Column Layout ===== */
 .info-column {
-  background: var(--bg-darker);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
   overflow-y: auto;
 }
 
@@ -100,20 +96,12 @@ body {
 }
 
 .settings-column {
-  background: var(--bg-darker);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
   overflow-y: auto;
 }
 
 /* ===== Chat Column Areas ===== */
 .messages-area {
   flex: 1;
-  background: var(--bg-darker);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
   overflow-y: auto;
   min-height: 0;
 }
