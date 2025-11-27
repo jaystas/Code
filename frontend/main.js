@@ -157,7 +157,19 @@ function loadPage(page, container) {
 
         <!-- Settings Column (Right) -->
         <div class="settings-column">
+          <button class="drawer-toggle" id="drawer-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <path fill="none" stroke="#4a5565" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m13 20l-3-8l3-8" />
+            </svg>
+          </button>
         </div>
+      </div>
+
+      <!-- Settings Drawer (offscreen) -->
+      <div class="drawer-overlay" id="drawer-overlay"></div>
+      <div class="settings-drawer" id="settings-drawer">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text);">Settings</h2>
+        <p style="color: var(--muted);">Settings content will go here...</p>
       </div>
     `,
     models: `
@@ -218,7 +230,49 @@ function loadPage(page, container) {
       // Wait a bit for DOM to be ready
       setTimeout(() => {
         initEditor();
+        initDrawer();
       }, 100);
     }
   }, 150);
+}
+
+/**
+ * Initialize settings drawer functionality
+ */
+function initDrawer() {
+  const drawerToggle = document.getElementById('drawer-toggle');
+  const drawer = document.getElementById('settings-drawer');
+  const overlay = document.getElementById('drawer-overlay');
+
+  if (!drawerToggle || !drawer || !overlay) {
+    return;
+  }
+
+  // Toggle drawer on button click
+  drawerToggle.addEventListener('click', () => {
+    const isOpen = drawer.classList.contains('open');
+
+    if (isOpen) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  });
+
+  // Close drawer when clicking overlay
+  overlay.addEventListener('click', () => {
+    closeDrawer();
+  });
+
+  function openDrawer() {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    drawerToggle.classList.add('active');
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    drawerToggle.classList.remove('active');
+  }
 }
