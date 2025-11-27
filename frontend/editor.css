@@ -6,6 +6,7 @@
 .editor-container {
   max-width: 1200px;
   margin: 0 auto;
+  border: 1px solid #3f3f3f; 
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 
@@ -244,6 +245,7 @@
   gap: 12px;
   padding: 16px;
   background-color: #191b1f;
+  border-top: 1px solid #212429; 
 }
 
 .mic-button {
