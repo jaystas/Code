@@ -3,6 +3,13 @@
  * Handles navigation and sidebar collapse
  */
 
+// Import editor functions
+import { initEditor, handleMic, handleSend } from './editor.js';
+
+// Make functions globally accessible for inline event handlers
+window.handleMic = handleMic;
+window.handleSend = handleSend;
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
@@ -112,8 +119,27 @@ function loadPage(page, container) {
   const pageContent = {
     home: `
       <div class="page-content">
-        <h1>Welcome to aiChat</h1>
-        <p>Your low-latency voice chat application</p>
+        <div class="editor-container">
+          <div class="toolbar" id="toolbar">
+            <!-- Toolbar buttons will be dynamically added by editor.js -->
+          </div>
+
+          <div class="editor-content">
+            <div id="editor"></div>
+          </div>
+
+          <div class="editor-footer">
+            <button class="mic-button" onclick="handleMic()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+            <button class="send-button" onclick="handleSend()">Send</button>
+          </div>
+        </div>
       </div>
     `,
     models: `
@@ -168,5 +194,13 @@ function loadPage(page, container) {
   setTimeout(() => {
     container.innerHTML = content;
     container.style.opacity = '1';
+
+    // Initialize editor if on home page
+    if (page === 'home') {
+      // Wait a bit for DOM to be ready
+      setTimeout(() => {
+        initEditor();
+      }, 100);
+    }
   }, 150);
 }
