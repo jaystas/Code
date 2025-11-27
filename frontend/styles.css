@@ -56,7 +56,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  margin: 1rem;
+  margin: 2rem;
   background: #1c1e22;
   transition: opacity 0.15s ease;
 }
@@ -309,4 +309,5 @@ body {
 .sidebar.collapsed .nav-link {
   justify-content: center;
 }
+
 
