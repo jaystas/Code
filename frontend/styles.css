@@ -122,8 +122,8 @@ body {
 }
 
 .drawer-toggle {
-  position: absolute;
-  left: -40px;
+  position: fixed;
+  right: calc(5px + 2rem);
   top: 50%;
   transform: translateY(-50%);
   background: var(--bg-darker);
@@ -132,19 +132,20 @@ body {
   padding: 8px 6px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 10;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.settings-drawer:hover .drawer-toggle {
+.drawer-toggle:hover {
   opacity: 1;
 }
 
 .drawer-toggle.active {
   opacity: 1;
+  right: calc(5px + 2rem + 350px);
 }
 
 .drawer-toggle svg {
