@@ -216,19 +216,17 @@ function loadPage(page, container) {
 
         <!-- Character Card Column -->
         <div class="character-card-column">
-          <div class="character-welcome">
+          <!-- Welcome Message -->
+          <div class="character-welcome" id="character-welcome">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h2>Welcome to Characters</h2>
             <p>Create and manage AI characters for your conversations. Click "Add Character" to get started, or select an existing character from the list.</p>
           </div>
-        </div>
-      </div>
 
-      <!-- Character Card Modal -->
-      <div class="character-card-overlay" id="character-card-overlay">
-        <div class="character-card">
+          <!-- Character Card (Embedded) -->
+          <div class="character-card" id="character-card">
           <!-- Card Header -->
           <div class="card-header">
             <div class="header-left">
@@ -362,6 +360,7 @@ function loadPage(page, container) {
               <button class="btn btn-secondary" id="chat-character-btn">Chat</button>
               <button class="btn btn-primary" id="save-character-btn">Save Character</button>
             </div>
+          </div>
           </div>
         </div>
       </div>
