@@ -305,6 +305,12 @@
   position: relative;
 }
 
+.character-card.switching {
+  opacity: 0.3;
+  transform: scale(0.98);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
 /* ===== Card Header ===== */
 .card-header {
   display: flex;

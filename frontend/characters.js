@@ -258,18 +258,16 @@ function selectCharacter(characterId) {
 
   // If card is already visible, animate the transition
   if (isCardVisible) {
-    // Fade out
-    card.style.opacity = '0';
-    card.style.transform = 'scale(0.95)';
+    // Add switching class for animation
+    card.classList.add('switching');
 
     setTimeout(() => {
       // Load new character data
       loadCharacterData(currentCharacter);
 
-      // Fade back in
-      card.style.opacity = '1';
-      card.style.transform = 'scale(1)';
-    }, 200);
+      // Remove switching class to fade back in
+      card.classList.remove('switching');
+    }, 150);
   } else {
     // Load character data into card
     loadCharacterData(currentCharacter);
