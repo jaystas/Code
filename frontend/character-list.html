@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Characters</title>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --bg-dark: #1c1e22;
+      --bg-darker: #191b1f;
+      --bg-card: #222429;
+      --border: #333;
+      --border-secondary: #404040;
+      --primary: #4a90e2;
+      --primary-hover: #5ba3f5;
+      --primary-glow: rgba(74, 144, 226, 0.15);
+      --text: #e5e5e5;
+      --muted: #a0a0a0;
+      --text-tertiary: #707070;
+      --tab-hover: #25272d;
+      --input-bg: #2a2d35;
+      --input-border: #404040;
+      --accent-blue-light: rgba(74, 144, 226, 0.1);
+      --danger: #e24a4a;
+      --success: #4ae29a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== Main Layout ===== */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ===== Left Panel - Character List ===== */
+    .characters-panel {
+      width: 320px;
+      min-width: 320px;
+      background: var(--bg-darker);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    /* Search Bar */
+    .search-container {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 40px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-tertiary);
+    }
+
+    /* Character List */
+    .character-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .character-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .character-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .character-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .character-list::-webkit-scrollbar-thumb:hover {
+      background: var(--border-secondary);
+    }
+
+    /* Character List Item */
+    .character-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+      position: relative;
+      border: 1px solid transparent;
+    }
+
+    .character-item:hover {
+      background: var(--tab-hover);
+    }
+
+    .character-item.active {
+      background: var(--primary-glow);
+      border-color: var(--primary);
+    }
+
+    .character-item.active .item-name {
+      color: var(--primary);
+    }
+
+    /* Avatar */
+    .item-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .character-item.active .item-avatar {
+      border-color: var(--primary);
+    }
+
+    .item-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .item-avatar svg {
+      width: 24px;
+      height: 24px;
+      color: var(--muted);
+    }
+
+    /* Character Info */
+    .item-info {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.2s ease;
+    }
+
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-voice {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .item-voice svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .item-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+
+    /* Quick Chat Button */
+    .quick-chat-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      opacity: 0;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .character-item:hover .quick-chat-btn {
+      opacity: 1;
+    }
+
+    .quick-chat-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .quick-chat-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Add Character Button */
+    .add-character-section {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .add-character-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .add-character-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-glow);
+    }
+
+    .add-character-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== Right Panel - Character Detail ===== */
+    .detail-panel {
+      flex: 1;
+      background: var(--bg-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      overflow: auto;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* ===== Character Card (Embedded Version) ===== */
+    .character-card {
+      background: var(--bg-darker);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 900px;
+      height: 100%;
+      max-height: 700px;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .character-card.visible {
+      display: flex;
+    }
+
+    /* Card Header */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .avatar-container {
+      position: relative;
+      width: 56px;
+      height: 56px;
+    }
+
+    .avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--border);
+      overflow: hidden;
+    }
+
+    .avatar svg {
+      width: 28px;
+      height: 28px;
+      color: var(--muted);
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-edit-btn {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      border: 2px solid var(--bg-darker);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .avatar-edit-btn:hover {
+      background: var(--primary-hover);
+      transform: scale(1.05);
+    }
+
+    .avatar-edit-btn svg {
+      width: 12px;
+      height: 12px;
+      color: white;
+    }
+
+    .character-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      color: var(--muted);
+    }
+
+    .close-btn:hover {
+      background: var(--tab-hover);
+      color: var(--text);
+    }
+
+    .close-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Tabs */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-darker);
+      flex-shrink: 0;
+    }
+
+    .tab-button {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-button:hover {
+      color: var(--text);
+      background: var(--tab-hover);
+    }
+
+    .tab-button.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Card Body */
+    .card-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Image Section */
+    .image-section {
+      width: 40%;
+      background: var(--bg-darker);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 32px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .image-section.hidden {
+      display: none;
+    }
+
+    .image-upload-area {
+      width: 100%;
+      height: 300px;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .image-upload-area:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-glow);
+    }
+
+    .image-upload-area svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.6;
+    }
+
+    .image-upload-area span {
+      font-size: 14px;
+    }
+
+    .image-upload-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Content Section */
+    .content-section {
+      flex: 1;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+    }
+
+    .content-section.full-width {
+      border-left: none;
+    }
+
+    .content-section::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content-section::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content-section::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .tab-content {
+      padding: 24px;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .form-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: all 0.2s ease;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a0a0a0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 40px;
+    }
+
+    .form-select option {
+      background: var(--bg-darker);
+      color: var(--text);
+    }
+
+    /* Placeholder Content */
+    .placeholder-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .placeholder-content svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .placeholder-content h3 {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .placeholder-content p {
+      font-size: 14px;
+      color: var(--text-tertiary);
+    }
+
+    /* Card Footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-darker);
+      flex-shrink: 0;
+    }
+
+    .footer-left,
+    .footer-right {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--tab-hover);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--input-bg);
+      border-color: var(--border-secondary);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(226, 74, 74, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Left Panel - Character List -->
+    <div class="characters-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Characters</h2>
+        <div class="search-container">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" class="search-input" placeholder="Search characters..." id="searchInput">
+        </div>
+      </div>
+
+      <div class="character-list" id="characterList">
+        <!-- Character items will be dynamically generated -->
+      </div>
+
+      <div class="add-character-section">
+        <button class="add-character-btn" id="addCharacterBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Character
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Panel - Character Detail -->
+    <div class="detail-panel">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h3>Select a Character</h3>
+        <p>Choose a character from the list to view details</p>
+      </div>
+
+      <!-- Character Card -->
+      <div class="character-card" id="characterCard">
+        <div class="card-header">
+          <div class="header-left">
+            <div class="avatar-container">
+              <div class="avatar" id="headerAvatar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <button class="avatar-edit-btn" id="avatarEditBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            </div>
+            <h2 class="character-name" id="characterName">Character Name</h2>
+          </div>
+          <button class="close-btn" id="closeBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="tabs-header">
+          <button class="tab-button active" data-tab="profile">Profile</button>
+          <button class="tab-button" data-tab="background">Background</button>
+          <button class="tab-button" data-tab="chats">Chats</button>
+          <button class="tab-button" data-tab="groups">Groups</button>
+          <button class="tab-button" data-tab="memory">Memory</button>
+        </div>
+
+        <div class="card-body">
+          <div class="image-section" id="imageSection">
+            <div class="image-upload-area" id="imageUploadArea">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Click to upload image</span>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+          </div>
+
+          <div class="content-section" id="contentSection">
+            <div class="tab-content">
+              <div class="tab-panel active" id="profile-panel">
+                <div class="form-group">
+                  <label class="form-label">Global Roleplay System Prompt</label>
+                  <textarea class="form-textarea" id="globalPrompt" placeholder="Enter global roleplay system prompt">You are {character.name}, a roleplay actor engaging in a conversation with {user.name}. Your replies should be written in a conversational format, taking on the personality and characteristics of {character.name}.</textarea>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Character Name</label>
+                  <input type="text" class="form-input" id="characterNameInput" placeholder="Enter character name">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Voice</label>
+                  <select class="form-select" id="voiceSelect">
+                    <option value="">Select voice</option>
+                    <option value="nova">Nova</option>
+                    <option value="aria">Aria</option>
+                    <option value="sage">Sage</option>
+                    <option value="echo">Echo</option>
+                    <option value="alloy">Alloy</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">System Prompt</label>
+                  <textarea class="form-textarea" id="systemPrompt" placeholder="Enter system prompt"></textarea>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="background-panel">
+                <div class="placeholder-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  <h3>Background</h3>
+                  <p>Coming soon</p>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="chats-panel">
+                <div class="placeholder-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                  </svg>
+                  <h3>Chats</h3>
+                  <p>Coming soon</p>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="groups-panel">
+                <div class="placeholder-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014 0z" />
+                  </svg>
+                  <h3>Groups</h3>
+                  <p>Coming soon</p>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="memory-panel">
+                <div class="placeholder-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                  </svg>
+                  <h3>Memory</h3>
+                  <p>Coming soon</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="footer-left">
+            <button class="btn btn-danger" id="deleteBtn">Delete</button>
+          </div>
+          <div class="footer-right">
+            <button class="btn btn-secondary" id="chatBtn">Chat</button>
+            <button class="btn btn-primary" id="saveBtn">Save Character</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Sample Character Data =====
+    const characters = [
+      { id: 1, name: 'Luna', voice: 'Nova', image: 'https://i.pravatar.cc/100?img=1', systemPrompt: 'A wise and mystical oracle who speaks in riddles.' },
+      { id: 2, name: 'Marcus', voice: 'Echo', image: 'https://i.pravatar.cc/100?img=3', systemPrompt: 'A battle-hardened warrior with a heart of gold.' },
+      { id: 3, name: 'Aria', voice: 'Aria', image: 'https://i.pravatar.cc/100?img=5', systemPrompt: 'A cheerful bard who loves to tell stories.' },
+      { id: 4, name: 'Zephyr', voice: 'Sage', image: 'https://i.pravatar.cc/100?img=8', systemPrompt: 'A mysterious traveler from distant lands.' },
+      { id: 5, name: 'Nova', voice: 'Alloy', image: null, systemPrompt: 'An AI assistant learning about humanity.' },
+      { id: 6, name: 'Ember', voice: 'Nova', image: 'https://i.pravatar.cc/100?img=9', systemPrompt: 'A fiery mage with explosive personality.' },
+    ];
+
+    let selectedCharacterId = null;
+
+    // ===== DOM Elements =====
+    const characterList = document.getElementById('characterList');
+    const emptyState = document.getElementById('emptyState');
+    const characterCard = document.getElementById('characterCard');
+    const searchInput = document.getElementById('searchInput');
+    const addCharacterBtn = document.getElementById('addCharacterBtn');
+
+    // ===== Render Character List =====
+    function renderCharacterList(filter = '') {
+      const filteredCharacters = characters.filter(c => 
+        c.name.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      characterList.innerHTML = filteredCharacters.map(character => `
+        <div class="character-item ${character.id === selectedCharacterId ? 'active' : ''}" data-id="${character.id}">
+          <div class="item-avatar">
+            ${character.image 
+              ? `<img src="${character.image}" alt="${character.name}">` 
+              : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>`
+            }
+          </div>
+          <div class="item-info">
+            <div class="item-name">${character.name}</div>
+            <div class="item-meta">
+              <span class="item-voice">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                ${character.voice}
+              </span>
+            </div>
+          </div>
+          <button class="quick-chat-btn" data-action="chat" title="Quick chat">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </button>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      document.querySelectorAll('.character-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.quick-chat-btn')) {
+            e.stopPropagation();
+            const id = parseInt(item.dataset.id);
+            console.log('Quick chat with character:', id);
+            return;
+          }
+          selectCharacter(parseInt(item.dataset.id));
+        });
+      });
+    }
+
+    // ===== Select Character =====
+    function selectCharacter(id) {
+      selectedCharacterId = id;
+      const character = characters.find(c => c.id === id);
+
+      if (character) {
+        // Update UI
+        emptyState.style.display = 'none';
+        characterCard.classList.add('visible');
+
+        // Populate card
+        document.getElementById('characterName').textContent = character.name;
+        document.getElementById('characterNameInput').value = character.name;
+        document.getElementById('voiceSelect').value = character.voice?.toLowerCase() || '';
+        document.getElementById('systemPrompt').value = character.systemPrompt || '';
+
+        // Update avatar
+        const headerAvatar = document.getElementById('headerAvatar');
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        
+        if (character.image) {
+          headerAvatar.innerHTML = `<img src="${character.image}" alt="${character.name}">`;
+          imageUploadArea.innerHTML = `<img src="${character.image}" alt="${character.name}" class="image-preview">`;
+        } else {
+          headerAvatar.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          `;
+          imageUploadArea.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>Click to upload image</span>
+          `;
+        }
+
+        // Re-render list to update active state
+        renderCharacterList(searchInput.value);
+      }
+    }
+
+    // ===== Close Character Card =====
+    document.getElementById('closeBtn').addEventListener('click', () => {
+      selectedCharacterId = null;
+      characterCard.classList.remove('visible');
+      emptyState.style.display = 'block';
+      renderCharacterList(searchInput.value);
+    });
+
+    // ===== Search =====
+    searchInput.addEventListener('input', (e) => {
+      renderCharacterList(e.target.value);
+    });
+
+    // ===== Tab Switching =====
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const imageSection = document.getElementById('imageSection');
+    const contentSection = document.getElementById('contentSection');
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanels.forEach(panel => panel.classList.remove('active'));
+
+        button.classList.add('active');
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(`${tabId}-panel`).classList.add('active');
+
+        if (tabId === 'profile') {
+          imageSection.classList.remove('hidden');
+          contentSection.classList.remove('full-width');
+        } else {
+          imageSection.classList.add('hidden');
+          contentSection.classList.add('full-width');
+        }
+      });
+    });
+
+    // ===== Character Name Sync =====
+    document.getElementById('characterNameInput').addEventListener('input', (e) => {
+      document.getElementById('characterName').textContent = e.target.value || 'Character Name';
+    });
+
+    // ===== Image Upload =====
+    const imageInput = document.getElementById('imageInput');
+    const avatarEditBtn = document.getElementById('avatarEditBtn');
+
+    imageSection.addEventListener('click', () => {
+      imageInput.click();
+    });
+
+    avatarEditBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      imageInput.click();
+    });
+
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const imgUrl = event.target.result;
+          document.getElementById('imageUploadArea').innerHTML = `<img src="${imgUrl}" class="image-preview" alt="Character image">`;
+          document.getElementById('headerAvatar').innerHTML = `<img src="${imgUrl}" alt="Character avatar">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // ===== Add Character =====
+    addCharacterBtn.addEventListener('click', () => {
+      const newId = Math.max(...characters.map(c => c.id)) + 1;
+      const newCharacter = {
+        id: newId,
+        name: 'New Character',
+        voice: '',
+        image: null,
+        systemPrompt: ''
+      };
+      characters.push(newCharacter);
+      selectCharacter(newId);
+    });
+
+    // ===== Button Actions =====
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete this character?')) {
+        const index = characters.findIndex(c => c.id === selectedCharacterId);
+        if (index > -1) {
+          characters.splice(index, 1);
+          selectedCharacterId = null;
+          characterCard.classList.remove('visible');
+          emptyState.style.display = 'block';
+          renderCharacterList(searchInput.value);
+        }
+      }
+    });
+
+    document.getElementById('chatBtn').addEventListener('click', () => {
+      console.log('Opening chat with character:', selectedCharacterId);
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const character = characters.find(c => c.id === selectedCharacterId);
+      if (character) {
+        character.name = document.getElementById('characterNameInput').value;
+        character.voice = document.getElementById('voiceSelect').value;
+        character.systemPrompt = document.getElementById('systemPrompt').value;
+        renderCharacterList(searchInput.value);
+        alert('Character saved successfully!');
+      }
+    });
+
+    // ===== Initial Render =====
+    renderCharacterList();
+  </script>
+</body>
+</html>
