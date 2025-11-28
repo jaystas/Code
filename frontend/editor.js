@@ -49,7 +49,7 @@ export function initEditor() {
       }),
       Image
     ],
-    content: '<p>Start typing your message...</p>',
+    content: '<p></p>',
     editorProps: {
       attributes: {
         class: 'prose prose-invert max-w-none'
