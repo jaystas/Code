@@ -1,45 +1,42 @@
-"""
-Low-Latency Voice Chat Server - Production Implementation
-
-This FastAPI server implements a concurrent multi-character voice chat system with:
-- Speech-to-Text using RealtimeSTT (faster_whisper)
-- LLM streaming via OpenRouter AsyncOpenAI
-- Text-to-Speech using Higgs Audio (description method)
-- Concurrent LLM and TTS processing for minimal latency
-- Sequential audio playback with proper ordering
-- Full conversation history and character management
-- WebSocket-based bidirectional audio streaming
-
-Architecture:
-    Browser Audio → STT → LLM Orchestrator → TTS (concurrent) → Audio Sequencer → Browser
-"""
-
-import asyncio
-import sys
-import time
-import re
-import json
-import uuid
 import os
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+import re
+import sys
+import json
+import time
+import uuid
+import queue
+import torch
+import uvicorn
+import asyncio
+import aiohttp
+import logging
+import requests
+import threading
+import numpy as np
+import stream2sentence as s2s
+from datetime import datetime
+from pydantic import BaseModel
+from queue import Queue, Empty
+from openai import AsyncOpenAI
 from collections import defaultdict
+from threading import Thread, Event, Lock
+from dataclasses import dataclass, field
+from contextlib import asynccontextmanager
+from supabase import create_client, Client
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
+from typing import Optional, Dict, List, Union, Any, AsyncIterator, AsyncGenerator
+from loguru import logger
 from enum import Enum
 
-import torch
-import numpy as np
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from openai import AsyncOpenAI
-from supabase import create_client, Client
-
-# Import existing components
 from RealtimeSTT import AudioToTextRecorder
 from boson_multimodal.serve.serve_engine import HiggsAudioServeEngine
-from boson_multimodal.data_types import ChatMLSample, Message
 from boson_multimodal.model.higgs_audio.utils import revert_delay_pattern
+from boson_multimodal.data_types import ChatMLSample, Message, AudioContent
+from backend.RealtimeTTS.threadsafe_generators import CharIterator, AccumulatingThreadSafeGenerator
 
-# Supabase managers
 from character_manager import (
     CharacterManager,
     Character as DbCharacter,
@@ -64,21 +61,25 @@ from message_manager import (
     MessageCreate
 )
 
-# Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://jslevsbvapopncjehhva.supabase.co")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzbGV2c2J2YXBvcG5jamVoaHZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNTQwOTMsImV4cCI6MjA3MzYzMDA5M30.DotbJM3IrvdVzwfScxOtsSpxq0xsj7XxI3DvdiqDSrE")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-# Initialize managers
+logging.basicConfig(filename="filelogger.log", format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+sys.path.append('/workspace/tts/Code')
+
 character_manager = CharacterManager(supabase)
 voice_manager = VoiceManager(supabase)
 conversation_manager = ConversationManager(supabase)
 message_manager = MessageManager(supabase)
 
-# ============================================================================
-# DATA MODELS
-# ============================================================================
+########################################
+##--           Data Models          --##
+########################################
 
 @dataclass
 class Character:
@@ -184,7 +185,6 @@ class ConversationContext:
         self.history.append(ConversationMessage(
             role="user",
             content=text,
-            character_id=None,
             name="User"
         ))
 
@@ -197,9 +197,9 @@ class ConversationContext:
             name=character.name
         ))
 
-# ============================================================================
-# QUEUE DATA CLASSES
-# ============================================================================
+########################################
+##--          Data Classes          --##
+########################################
 
 @dataclass
 class AudioChunk:
@@ -249,29 +249,28 @@ class SequencedAudioChunk:
     speaker_name: str
     timestamp: float
 
-
-# ============================================================================
-# QUEUE MANAGER
-# ============================================================================
+########################################
+##--          Queue Manager         --##
+########################################
 
 class QueueManager:
     """Manages all inter-service queues and control signals"""
 
-    def __init__(self, max_queue_size: int = 100):
+    def __init__(self):
         # Audio from browser → STT
-        self.audio_input = asyncio.Queue(maxsize=max_queue_size)
+        self.audio_input = asyncio.Queue()
 
         # STT → LLM Orchestrator
-        self.transcription = asyncio.Queue(maxsize=max_queue_size)
+        self.transcription = asyncio.Queue()
 
         # LLM → Browser (for text display)
-        self.text_output = asyncio.Queue(maxsize=max_queue_size)
+        self.text_output = asyncio.Queue()
 
         # LLM → TTS (with speaker info and sequence)
-        self.tts_requests = asyncio.Queue(maxsize=max_queue_size)
+        self.tts_requests = asyncio.Queue()
 
         # TTS → Audio Sequencer
-        self.audio_output = asyncio.Queue(maxsize=max_queue_size)
+        self.audio_output = asyncio.Queue()
 
         # Control signals
         self.stop_signal = asyncio.Event()
@@ -294,9 +293,9 @@ class QueueManager:
         await asyncio.sleep(0.1)
         self.interrupt_signal.clear()
 
-# ============================================================================
-# CHARACTER SERVICE
-# ============================================================================
+########################################
+##--        Character Service       --##
+########################################
 
 class CharacterService:
     """
@@ -462,9 +461,9 @@ class CharacterService:
         # Fallback: return raw response (LLM didn't follow instructions)
         return raw_response.strip()
 
-# ============================================================================
-# STT SERVICE
-# ============================================================================
+########################################
+##--           STT Service          --##
+########################################
 
 class STTService:
     """
@@ -544,9 +543,9 @@ class STTService:
                 print(f"STT Service error: {e}")
                 continue
 
-# ============================================================================
-# LLM ORCHESTRATOR
-# ============================================================================
+########################################
+##--         LLM Orchestrator       --##
+########################################
 
 class LLMOrchestrator:
     """
@@ -804,9 +803,9 @@ class LLMOrchestrator:
 
         return False
 
-# ============================================================================
-# TTS SERVICE (HIGGS)
-# ============================================================================
+########################################
+##--           TTS Service          --##
+########################################
 
 class HiggsTTSService:
     """
@@ -1036,9 +1035,9 @@ class HiggsTTSService:
             print(f"Token decode error: {e}")
             return None
 
-# ============================================================================
-# AUDIO SEQUENCER
-# ============================================================================
+########################################
+##--          Audio Playback        --##
+########################################
 
 class AudioPlaybackSequencer:
     """
@@ -1158,9 +1157,9 @@ class AudioPlaybackSequencer:
                 # Wait for more chunks from current sequence
                 break
 
-# ============================================================================
-# VOICE CHAT ORCHESTRATOR
-# ============================================================================
+########################################
+##--        WebSocket Handler       --##
+########################################
 
 class VoiceChatOrchestrator:
     """
@@ -1402,9 +1401,9 @@ class VoiceChatOrchestrator:
         """Alias for _stream_text_to_browser for task creation"""
         await self._stream_text_to_browser(websocket)
 
-# ============================================================================
-# FASTAPI APPLICATION
-# ============================================================================
+########################################
+##--           FastAPI App          --##
+########################################
 
 app = FastAPI(title="Low-Latency Voice Chat Server")
 
@@ -1470,9 +1469,9 @@ async def health():
     """Health check endpoint"""
     return {"status": "healthy"}
 
-# ============================================================================
-# CHARACTER CRUD ENDPOINTS
-# ============================================================================
+########################################
+##--       Character Endpoints      --##
+########################################
 
 @app.get("/api/characters", response_model=List[DbCharacter])
 async def get_all_characters():
@@ -1515,9 +1514,9 @@ async def delete_character(character_id: str):
     success = await character_manager.delete_character(character_id)
     return {"success": success, "message": f"Character {character_id} deleted"}
 
-# ============================================================================
-# VOICE CRUD ENDPOINTS
-# ============================================================================
+########################################
+##--         Voice Endpoints        --##
+########################################
 
 @app.get("/api/voices", response_model=List[DbVoice])
 async def get_all_voices():
@@ -1545,9 +1544,9 @@ async def delete_voice(voice: str):
     success = await voice_manager.delete_voice(voice)
     return {"success": success, "message": f"Voice {voice} deleted"}
 
-# ============================================================================
-# CONVERSATION ENDPOINTS
-# ============================================================================
+########################################
+##--      Conversation Endpoints    --##
+########################################
 
 @app.get("/api/conversations")
 async def get_conversations(limit: Optional[int] = None, offset: int = 0):
@@ -1590,9 +1589,9 @@ async def delete_conversation(conversation_id: str):
     await conversation_manager.delete_conversation(conversation_id)
     return {"message": "Conversation deleted successfully"}
 
-# ============================================================================
-# MESSAGE ENDPOINTS
-# ============================================================================
+########################################
+##--        Message Endpoints       --##
+########################################
 
 @app.get("/api/messages")
 async def get_messages(conversation_id: str, limit: Optional[int] = None, offset: int = 0):
@@ -1619,30 +1618,11 @@ async def create_messages_batch(messages: List[MessageCreate]):
     """Create multiple messages in a batch"""
     return await message_manager.create_messages_batch(messages)
 
-# ============================================================================
-# MAIN
-# ============================================================================
+########################################
+##--           Run Server           --##
+########################################
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 if __name__ == "__main__":
-    import uvicorn
-
-    print("=" * 60)
-    print("Low-Latency Voice Chat Server")
-    print("=" * 60)
-    print()
-    print("Starting server...")
-    print("WebSocket endpoint: ws://localhost:8000/ws")
-    print("API docs: http://localhost:8000/docs")
-    print("Health check: http://localhost:8000/health")
-    print()
-
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        log_level="info"
-    )
-
-
-
-
+    uvicorn.run(app, host="0.0.0.0", port=8000)
