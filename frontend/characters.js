@@ -21,7 +21,25 @@ export function initCharacters() {
   // Setup event listeners
   setupEventListeners();
 
+  // Create notification container
+  createNotificationContainer();
+
   console.log('Characters page initialized');
+}
+
+/**
+ * Create notification container
+ */
+function createNotificationContainer() {
+  // Check if container already exists
+  if (document.getElementById('notification-container')) {
+    return;
+  }
+
+  const container = document.createElement('div');
+  container.id = 'notification-container';
+  container.className = 'notification-container';
+  document.body.appendChild(container);
 }
 
 /**
@@ -235,11 +253,30 @@ function selectCharacter(characterId) {
 
   event.currentTarget?.classList.add('active');
 
-  // Load character data into card
-  loadCharacterData(currentCharacter);
+  const card = document.getElementById('character-card');
+  const isCardVisible = card?.classList.contains('show');
 
-  // Show the character card
-  showCharacterCard();
+  // If card is already visible, animate the transition
+  if (isCardVisible) {
+    // Fade out
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.95)';
+
+    setTimeout(() => {
+      // Load new character data
+      loadCharacterData(currentCharacter);
+
+      // Fade back in
+      card.style.opacity = '1';
+      card.style.transform = 'scale(1)';
+    }, 200);
+  } else {
+    // Load character data into card
+    loadCharacterData(currentCharacter);
+
+    // Show the character card
+    showCharacterCard();
+  }
 }
 
 /**
@@ -449,7 +486,8 @@ function saveCharacter() {
   currentCharacter.voice = voiceSelect?.value || '';
 
   // If this is a new character (no ID), generate one
-  if (!currentCharacter.id) {
+  const isNewCharacter = !currentCharacter.id;
+  if (isNewCharacter) {
     currentCharacter.id = generateId();
     characters.push(currentCharacter);
   } else {
@@ -466,11 +504,15 @@ function saveCharacter() {
   // Re-render the character list
   renderCharacterList();
 
-  // Show success message
-  alert('Character saved successfully!');
+  // Show success notification
+  showNotification(
+    isNewCharacter ? 'Character Created' : 'Character Saved',
+    `${currentCharacter.name} has been ${isNewCharacter ? 'created' : 'updated'} successfully`,
+    'success'
+  );
 
-  // Keep the card open so user can continue editing or switch to another character
-  // hideCharacterCard();
+  // Close the card after saving
+  hideCharacterCard();
 }
 
 /**
@@ -486,6 +528,8 @@ function deleteCharacter() {
     return;
   }
 
+  const characterName = currentCharacter.name;
+
   // Remove from array
   characters = characters.filter(c => c.id !== currentCharacter.id);
 
@@ -494,6 +538,13 @@ function deleteCharacter() {
 
   // Re-render the character list
   renderCharacterList();
+
+  // Show success notification
+  showNotification(
+    'Character Deleted',
+    `${characterName} has been deleted`,
+    'success'
+  );
 
   // Hide the card
   hideCharacterCard();
@@ -518,4 +569,87 @@ export function getCharacters() {
  */
 export function getSelectedCharacter() {
   return currentCharacter;
+}
+
+/**
+ * Show notification
+ */
+function showNotification(title, message, type = 'success') {
+  const container = document.getElementById('notification-container');
+
+  if (!container) {
+    console.warn('Notification container not found');
+    return;
+  }
+
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+
+  // Icon based on type
+  let iconSvg = '';
+  if (type === 'success') {
+    iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    `;
+  } else if (type === 'error') {
+    iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    `;
+  } else if (type === 'warning') {
+    iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    `;
+  }
+
+  notification.innerHTML = `
+    <div class="notification-icon ${type}">
+      ${iconSvg}
+    </div>
+    <div class="notification-content">
+      <div class="notification-title">${title}</div>
+      ${message ? `<div class="notification-message">${message}</div>` : ''}
+    </div>
+    <button class="notification-close">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  `;
+
+  // Add to container
+  container.appendChild(notification);
+
+  // Setup close button
+  const closeBtn = notification.querySelector('.notification-close');
+  closeBtn.addEventListener('click', () => {
+    removeNotification(notification);
+  });
+
+  // Show with animation
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    removeNotification(notification);
+  }, 3000);
+}
+
+/**
+ * Remove notification
+ */
+function removeNotification(notification) {
+  notification.classList.remove('show');
+
+  setTimeout(() => {
+    notification.remove();
+  }, 300);
 }
