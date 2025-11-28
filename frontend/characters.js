@@ -55,35 +55,29 @@ const charactersData = [
 let selectedCharacterId = null;
 let currentCharacterImage = null;
 
-// ===== DOM Element References =====
-const characterListItems = document.getElementById('characterListItems');
-const characterEmptyState = document.getElementById('characterEmptyState');
-const characterCardDetail = document.getElementById('characterCardDetail');
-const characterSearchInput = document.getElementById('characterSearchInput');
-const characterAddBtn = document.getElementById('characterAddBtn');
-
-// Character Card Elements
-const characterCardName = document.getElementById('characterCardName');
-const characterCardAvatar = document.getElementById('characterCardAvatar');
-const characterCardCloseBtn = document.getElementById('characterCardCloseBtn');
-const characterNameInput = document.getElementById('characterNameInput');
-const characterVoiceSelect = document.getElementById('characterVoiceSelect');
-const characterSystemPrompt = document.getElementById('characterSystemPrompt');
-const characterGlobalPrompt = document.getElementById('characterGlobalPrompt');
-const characterImageUploadArea = document.getElementById('characterImageUploadArea');
-const characterImageInput = document.getElementById('characterImageInput');
-const characterImageSection = document.getElementById('characterImageSection');
-const characterContentSection = document.getElementById('characterContentSection');
-const characterAvatarEditBtn = document.getElementById('characterAvatarEditBtn');
-
-// Footer Buttons
-const characterDeleteBtn = document.getElementById('characterDeleteBtn');
-const characterChatBtn = document.getElementById('characterChatBtn');
-const characterSaveBtn = document.getElementById('characterSaveBtn');
-
-// Tab Elements
-const characterTabBtns = document.querySelectorAll('.character-tab-btn');
-const characterTabPanels = document.querySelectorAll('.character-tab-panel');
+// DOM Element References - will be initialized in initializeCharactersPage()
+let characterListItems;
+let characterEmptyState;
+let characterCardDetail;
+let characterSearchInput;
+let characterAddBtn;
+let characterCardName;
+let characterCardAvatar;
+let characterCardCloseBtn;
+let characterNameInput;
+let characterVoiceSelect;
+let characterSystemPrompt;
+let characterGlobalPrompt;
+let characterImageUploadArea;
+let characterImageInput;
+let characterImageSection;
+let characterContentSection;
+let characterAvatarEditBtn;
+let characterDeleteBtn;
+let characterChatBtn;
+let characterSaveBtn;
+let characterTabBtns;
+let characterTabPanels;
 
 // ===== Render Character List =====
 function renderCharacterList(filter = '') {
@@ -318,14 +312,52 @@ function startChat() {
 
 // ===== Event Listeners Setup =====
 function initializeCharactersPage() {
+  console.log('initializeCharactersPage called');
+
+  // Initialize all DOM element references
+  characterListItems = document.getElementById('characterListItems');
+  characterEmptyState = document.getElementById('characterEmptyState');
+  characterCardDetail = document.getElementById('characterCardDetail');
+  characterSearchInput = document.getElementById('characterSearchInput');
+  characterAddBtn = document.getElementById('characterAddBtn');
+  characterCardName = document.getElementById('characterCardName');
+  characterCardAvatar = document.getElementById('characterCardAvatar');
+  characterCardCloseBtn = document.getElementById('characterCardCloseBtn');
+  characterNameInput = document.getElementById('characterNameInput');
+  characterVoiceSelect = document.getElementById('characterVoiceSelect');
+  characterSystemPrompt = document.getElementById('characterSystemPrompt');
+  characterGlobalPrompt = document.getElementById('characterGlobalPrompt');
+  characterImageUploadArea = document.getElementById('characterImageUploadArea');
+  characterImageInput = document.getElementById('characterImageInput');
+  characterImageSection = document.getElementById('characterImageSection');
+  characterContentSection = document.getElementById('characterContentSection');
+  characterAvatarEditBtn = document.getElementById('characterAvatarEditBtn');
+  characterDeleteBtn = document.getElementById('characterDeleteBtn');
+  characterChatBtn = document.getElementById('characterChatBtn');
+  characterSaveBtn = document.getElementById('characterSaveBtn');
+  characterTabBtns = document.querySelectorAll('.character-tab-btn');
+  characterTabPanels = document.querySelectorAll('.character-tab-panel');
+
+  console.log('DOM elements initialized:');
+  console.log('- characterSearchInput:', characterSearchInput);
+  console.log('- characterAddBtn:', characterAddBtn);
+  console.log('- characterListItems:', characterListItems);
+  console.log('- characterTabBtns count:', characterTabBtns.length);
+
   // Search
   if (characterSearchInput) {
     characterSearchInput.addEventListener('input', handleCharacterSearch);
+    console.log('Search listener added');
+  } else {
+    console.error('characterSearchInput element not found');
   }
 
   // Add character button
   if (characterAddBtn) {
     characterAddBtn.addEventListener('click', addNewCharacter);
+    console.log('Add character button listener added');
+  } else {
+    console.error('characterAddBtn element not found');
   }
 
   // Close button
@@ -380,7 +412,9 @@ function initializeCharactersPage() {
   });
 
   // Initial render
+  console.log('Rendering initial character list...');
   renderCharacterList();
+  console.log('Characters page fully initialized!');
 }
 
 // Export the initialization function as default
