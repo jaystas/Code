@@ -162,7 +162,7 @@ function loadPage(page, container) {
 
       <!-- Settings Drawer Toggle Button -->
       <button class="drawer-toggle" id="drawer-toggle">
-        <img class="arrow-left" src="assets/arrow.png" alt="arrow-compact" />
+        <img class="arrow-left" src="assets/left-arrow.png" alt="arrow-compact" />
       </button>
 
       <!-- Settings Drawer (offscreen) -->
