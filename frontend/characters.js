@@ -383,14 +383,10 @@ function initializeCharactersPage() {
   renderCharacterList();
 }
 
-// ===== Initialize when DOM is ready =====
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeCharactersPage);
-} else {
-  initializeCharactersPage();
-}
+// Export the initialization function as default
+export default initializeCharactersPage;
 
-// Export functions for use in other modules if needed
+// Export other functions for use in other modules if needed
 export {
   renderCharacterList,
   selectCharacter,
