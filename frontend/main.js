@@ -427,20 +427,25 @@ function loadPage(page, container) {
  */
 async function initCharactersPage() {
   try {
+    console.log('Initializing characters page...');
+
     // Dynamically import the characters module
-    const { default: initializeCharacters } = await import('./characters.js');
+    const charactersModule = await import('./characters.js');
+    console.log('Characters module loaded:', charactersModule);
+
+    const initializeCharacters = charactersModule.default;
 
     // Call the initialization function
     if (typeof initializeCharacters === 'function') {
+      console.log('Calling initializeCharacters function...');
       initializeCharacters();
+      console.log('Characters page initialized successfully');
+    } else {
+      console.error('initializeCharacters is not a function:', typeof initializeCharacters);
     }
   } catch (error) {
     console.error('Failed to initialize characters page:', error);
-
-    // Fallback: Try to manually initialize if the module is already loaded
-    if (typeof window.initializeCharactersPage === 'function') {
-      window.initializeCharactersPage();
-    }
+    console.error('Error stack:', error.stack);
   }
 }
 
