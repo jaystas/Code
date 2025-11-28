@@ -53,7 +53,7 @@ function setupEventListeners() {
   // Add character button
   const addBtn = document.getElementById('add-character-btn');
   if (addBtn) {
-    addBtn.addEventListener('click', () => showCharacterCard());
+    addBtn.addEventListener('click', () => showCharacterCard(true));
   }
 
   // Character search
@@ -62,20 +62,10 @@ function setupEventListeners() {
     searchInput.addEventListener('input', (e) => filterCharacters(e.target.value));
   }
 
-  // Close modal button
+  // Close card button
   const closeBtn = document.getElementById('character-card-close-btn');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => hideCharacterCard());
-  }
-
-  // Close on overlay click
-  const overlay = document.getElementById('character-card-overlay');
-  if (overlay) {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        hideCharacterCard();
-      }
-    });
   }
 
   // Tab buttons
@@ -253,13 +243,14 @@ function selectCharacter(characterId) {
 }
 
 /**
- * Show the character card modal
+ * Show the character card
  */
 function showCharacterCard(isNew = false) {
-  const overlay = document.getElementById('character-card-overlay');
+  const card = document.getElementById('character-card');
+  const welcome = document.getElementById('character-welcome');
 
-  if (!overlay) {
-    console.warn('Character card overlay not found');
+  if (!card || !welcome) {
+    console.warn('Character card or welcome element not found');
     return;
   }
 
@@ -276,23 +267,32 @@ function showCharacterCard(isNew = false) {
     loadCharacterData(currentCharacter);
   }
 
-  // Show overlay with animation
-  overlay.classList.add('show');
-  document.body.style.overflow = 'hidden';
+  // Hide welcome message and show card with animation
+  welcome.classList.add('hidden');
+
+  // Small delay to ensure smooth transition
+  setTimeout(() => {
+    card.classList.add('show');
+  }, 50);
 }
 
 /**
- * Hide the character card modal
+ * Hide the character card
  */
 function hideCharacterCard() {
-  const overlay = document.getElementById('character-card-overlay');
+  const card = document.getElementById('character-card');
+  const welcome = document.getElementById('character-welcome');
 
-  if (!overlay) {
+  if (!card || !welcome) {
     return;
   }
 
-  overlay.classList.remove('show');
-  document.body.style.overflow = '';
+  // Hide card and show welcome message
+  card.classList.remove('show');
+
+  setTimeout(() => {
+    welcome.classList.remove('hidden');
+  }, 300);
 
   // Reset current character and selection
   currentCharacter = null;
@@ -469,8 +469,8 @@ function saveCharacter() {
   // Show success message
   alert('Character saved successfully!');
 
-  // Hide the card
-  hideCharacterCard();
+  // Keep the card open so user can continue editing or switch to another character
+  // hideCharacterCard();
 }
 
 /**
