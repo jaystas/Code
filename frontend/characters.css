@@ -424,7 +424,7 @@
   flex-shrink: 0;
 }
 
-.tab-button {
+.character-tab-button {
   padding: 12px 20px;
   font-size: 14px;
   font-weight: 500;
@@ -437,12 +437,12 @@
   white-space: nowrap;
 }
 
-.tab-button:hover {
+.character-tab-button:hover {
   color: #e5e5e5;
   background: #25272d;
 }
 
-.tab-button.active {
+.character-tab-button.active {
   color: #4a90e2;
   border-bottom-color: #4a90e2;
 }
