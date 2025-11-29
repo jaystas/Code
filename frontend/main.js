@@ -253,11 +253,11 @@ function loadPage(page, container) {
 
           <!-- Tabs Header -->
           <div class="tabs-header">
-            <button class="tab-button active" data-tab="profile">Profile</button>
-            <button class="tab-button" data-tab="background">Background</button>
-            <button class="tab-button" data-tab="chats">Chats</button>
-            <button class="tab-button" data-tab="groups">Groups</button>
-            <button class="tab-button" data-tab="memory">Memory</button>
+            <button class="character-tab-button active" data-tab="profile">Profile</button>
+            <button class="character-tab-button" data-tab="background">Background</button>
+            <button class="character-tab-button" data-tab="chats">Chats</button>
+            <button class="character-tab-button" data-tab="groups">Groups</button>
+            <button class="character-tab-button" data-tab="memory">Memory</button>
           </div>
 
           <!-- Card Body -->
