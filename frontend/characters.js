@@ -3,28 +3,69 @@
  * Handles character creation, editing, deletion, and display
  */
 
+// Import API modules
+import * as CharactersAPI from './api/characters.js';
+import * as VoicesAPI from './api/voices.js';
+import { handleAPIError } from './api/config.js';
+
 // Character data storage
 let characters = [];
+let voices = [];
 let selectedCharacterId = null;
 let currentCharacter = null;
+let isLoading = false;
 
 /**
  * Initialize the characters page
  */
-export function initCharacters() {
-  // Load characters from localStorage
-  loadCharacters();
-
-  // Render the character list
-  renderCharacterList();
+export async function initCharacters() {
+  // Create notification container
+  createNotificationContainer();
 
   // Setup event listeners
   setupEventListeners();
 
-  // Create notification container
-  createNotificationContainer();
+  // Load data from backend
+  await loadData();
 
   console.log('Characters page initialized');
+}
+
+/**
+ * Load all data from backend (characters and voices)
+ */
+async function loadData() {
+  isLoading = true;
+  showLoadingState();
+
+  try {
+    // Load characters and voices in parallel
+    const [charactersData, voicesData] = await Promise.all([
+      CharactersAPI.getAllCharacters(),
+      VoicesAPI.getAllVoices(),
+    ]);
+
+    characters = charactersData.map(CharactersAPI.mapCharacterToFrontend);
+    voices = voicesData.map(VoicesAPI.mapVoiceToFrontend);
+
+    console.log(`Loaded ${characters.length} characters and ${voices.length} voices from backend`);
+
+    // Render the character list
+    renderCharacterList();
+
+    // Populate voice dropdown if card is open
+    populateVoiceDropdown();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    const errorMessage = handleAPIError(error);
+    showNotification('Error Loading Data', errorMessage, 'error');
+
+    // Render empty state
+    renderCharacterList();
+  } finally {
+    isLoading = false;
+    hideLoadingState();
+  }
 }
 
 /**
@@ -43,25 +84,49 @@ function createNotificationContainer() {
 }
 
 /**
- * Load characters from localStorage
+ * Show loading state
  */
-function loadCharacters() {
-  const savedCharacters = localStorage.getItem('aiChat_characters');
-  if (savedCharacters) {
-    try {
-      characters = JSON.parse(savedCharacters);
-    } catch (e) {
-      console.error('Error loading characters:', e);
-      characters = [];
-    }
+function showLoadingState() {
+  const listContainer = document.getElementById('character-list');
+  if (listContainer) {
+    listContainer.innerHTML = `
+      <div class="character-list-loading">
+        <div class="loading-spinner"></div>
+        <p>Loading characters...</p>
+      </div>
+    `;
   }
 }
 
 /**
- * Save characters to localStorage
+ * Hide loading state
  */
-function saveCharacters() {
-  localStorage.setItem('aiChat_characters', JSON.stringify(characters));
+function hideLoadingState() {
+  // Loading state will be replaced by renderCharacterList()
+}
+
+/**
+ * Populate voice dropdown
+ */
+function populateVoiceDropdown() {
+  const voiceSelect = document.getElementById('character-voice');
+  if (!voiceSelect) return;
+
+  // Clear existing options except the first placeholder
+  voiceSelect.innerHTML = '<option value="">Select voice</option>';
+
+  // Add voices from backend
+  voices.forEach(voice => {
+    const option = document.createElement('option');
+    option.value = voice.voice;
+    option.textContent = voice.voice;
+    voiceSelect.appendChild(option);
+  });
+
+  // Set current character's voice if exists
+  if (currentCharacter && currentCharacter.voice) {
+    voiceSelect.value = currentCharacter.voice;
+  }
 }
 
 /**
@@ -418,6 +483,7 @@ function loadCharacterData(character) {
   }
 
   // Voice
+  populateVoiceDropdown();
   const voiceSelect = document.getElementById('character-voice');
   if (voiceSelect) {
     voiceSelect.value = character.voice || '';
@@ -558,7 +624,7 @@ function handleVoiceMethodChange() {
 /**
  * Handle Create Voice button click
  */
-function handleCreateVoice() {
+async function handleCreateVoice() {
   const cloneRadio = document.getElementById('voice-method-clone');
   const speakerDesc = document.getElementById('voice-speaker-description');
   const scenePrompt = document.getElementById('voice-scene-prompt');
@@ -569,8 +635,30 @@ function handleCreateVoice() {
     return;
   }
 
-  const method = cloneRadio.checked ? 'clone' : 'profile';
+  // Validate: need character name for voice name
+  if (!currentCharacter || !currentCharacter.name) {
+    showNotification('Validation Error', 'Please enter a character name first', 'error');
+    return;
+  }
+
+  const method = cloneRadio.checked ? 'clone' : 'description';
+
+  // Validate based on method
+  if (method === 'description' && !speakerDesc.value.trim()) {
+    showNotification('Validation Error', 'Speaker description is required for description method', 'error');
+    return;
+  }
+
+  if (method === 'clone' && (!audioPath.value.trim() || !textPath.value.trim())) {
+    showNotification('Validation Error', 'Audio path and text path are required for clone method', 'error');
+    return;
+  }
+
+  // Generate voice name from character name
+  const voiceName = VoicesAPI.generateVoiceName(currentCharacter.name);
+
   const voiceData = {
+    voice: voiceName,
     method: method,
     speakerDescription: speakerDesc.value,
     scenePrompt: scenePrompt.value,
@@ -578,20 +666,53 @@ function handleCreateVoice() {
     textPath: textPath.value
   };
 
-  console.log('Creating voice with data:', voiceData);
+  // Disable button
+  const createBtn = document.getElementById('create-voice-btn');
+  if (createBtn) {
+    createBtn.disabled = true;
+    createBtn.textContent = 'Creating...';
+  }
 
-  // TODO: Implement actual voice creation logic
-  showNotification(
-    'Voice Creation',
-    `Voice creation with ${method} method will be implemented soon`,
-    'success'
-  );
+  try {
+    // Create voice via API
+    const createdVoice = await VoicesAPI.createVoice(voiceData);
+    console.log('Voice created:', createdVoice);
+
+    // Add to local voices array
+    voices.push(VoicesAPI.mapVoiceToFrontend(createdVoice));
+
+    // Update voice dropdown
+    populateVoiceDropdown();
+
+    // Auto-select the newly created voice
+    const voiceSelect = document.getElementById('character-voice');
+    if (voiceSelect) {
+      voiceSelect.value = createdVoice.voice;
+      currentCharacter.voice = createdVoice.voice;
+    }
+
+    showNotification(
+      'Voice Created',
+      `Voice "${createdVoice.voice}" created successfully and assigned to ${currentCharacter.name}`,
+      'success'
+    );
+  } catch (error) {
+    console.error('Error creating voice:', error);
+    const errorMessage = handleAPIError(error);
+    showNotification('Error Creating Voice', errorMessage, 'error');
+  } finally {
+    // Re-enable button
+    if (createBtn) {
+      createBtn.disabled = false;
+      createBtn.textContent = 'Create Voice';
+    }
+  }
 }
 
 /**
  * Save character
  */
-function saveCharacter() {
+async function saveCharacter() {
   if (!currentCharacter) {
     console.error('No character to save');
     return;
@@ -610,8 +731,15 @@ function saveCharacter() {
   const audioPath = document.getElementById('voice-audio-path');
   const textPath = document.getElementById('voice-text-path');
 
+  // Validate required fields
+  const characterName = nameInput?.value?.trim();
+  if (!characterName) {
+    showNotification('Validation Error', 'Character name is required', 'error');
+    return;
+  }
+
   // Update character object
-  currentCharacter.name = nameInput?.value || 'Character name';
+  currentCharacter.name = characterName;
   currentCharacter.globalPrompt = globalPromptInput?.value || '';
   currentCharacter.systemPrompt = systemPromptInput?.value || '';
   currentCharacter.voice = voiceSelect?.value || '';
@@ -625,69 +753,125 @@ function saveCharacter() {
     textPath: textPath?.value || ''
   };
 
-  // If this is a new character (no ID), generate one
   const isNewCharacter = !currentCharacter.id;
-  if (isNewCharacter) {
-    currentCharacter.id = generateId();
-    characters.push(currentCharacter);
-  } else {
-    // Update existing character
-    const index = characters.findIndex(c => c.id === currentCharacter.id);
-    if (index !== -1) {
-      characters[index] = currentCharacter;
-    }
+
+  // Disable save button to prevent double-clicks
+  const saveBtn = document.getElementById('save-character-btn');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
   }
 
-  // Save to localStorage
-  saveCharacters();
+  try {
+    let savedCharacter;
 
-  // Re-render the character list
-  renderCharacterList();
+    if (isNewCharacter) {
+      // Create new character via API
+      savedCharacter = await CharactersAPI.createCharacter(currentCharacter);
+      console.log('Character created:', savedCharacter);
 
-  // Show success notification
-  showNotification(
-    isNewCharacter ? 'Character Created' : 'Character Saved',
-    `${currentCharacter.name} has been ${isNewCharacter ? 'created' : 'updated'} successfully`,
-    'success'
-  );
+      // Add to local array
+      const mappedCharacter = CharactersAPI.mapCharacterToFrontend(savedCharacter);
+      characters.push(mappedCharacter);
+    } else {
+      // Update existing character via API
+      savedCharacter = await CharactersAPI.updateCharacter(currentCharacter.id, currentCharacter);
+      console.log('Character updated:', savedCharacter);
 
-  // Close the card after saving
-  hideCharacterCard();
+      // Update in local array
+      const index = characters.findIndex(c => c.id === currentCharacter.id);
+      if (index !== -1) {
+        characters[index] = CharactersAPI.mapCharacterToFrontend(savedCharacter);
+      }
+    }
+
+    // Re-render the character list
+    renderCharacterList();
+
+    // Show success notification
+    showNotification(
+      isNewCharacter ? 'Character Created' : 'Character Saved',
+      `${characterName} has been ${isNewCharacter ? 'created' : 'updated'} successfully`,
+      'success'
+    );
+
+    // Close the card after saving
+    hideCharacterCard();
+  } catch (error) {
+    console.error('Error saving character:', error);
+    const errorMessage = handleAPIError(error);
+    showNotification(
+      'Error Saving Character',
+      errorMessage,
+      'error'
+    );
+  } finally {
+    // Re-enable save button
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Character';
+    }
+  }
 }
 
 /**
  * Delete character
  */
-function deleteCharacter() {
+async function deleteCharacter() {
   if (!currentCharacter || !currentCharacter.id) {
     console.error('No character to delete');
     return;
   }
 
-  if (!confirm('Are you sure you want to delete this character?')) {
+  if (!confirm(`Are you sure you want to delete ${currentCharacter.name}? This action cannot be undone.`)) {
     return;
   }
 
   const characterName = currentCharacter.name;
+  const characterId = currentCharacter.id;
 
-  // Remove from array
-  characters = characters.filter(c => c.id !== currentCharacter.id);
+  // Disable delete button to prevent double-clicks
+  const deleteBtn = document.getElementById('delete-character-btn');
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.textContent = 'Deleting...';
+  }
 
-  // Save to localStorage
-  saveCharacters();
+  try {
+    // Delete via API
+    await CharactersAPI.deleteCharacter(characterId);
+    console.log('Character deleted:', characterId);
 
-  // Re-render the character list
-  renderCharacterList();
+    // Remove from local array
+    characters = characters.filter(c => c.id !== characterId);
 
-  // Show success notification
-  showNotification(
-    'Character Deleted',
-    `${characterName} has been deleted`,
-    'success'
-  );
+    // Re-render the character list
+    renderCharacterList();
 
-  // Hide the card
-  hideCharacterCard();
+    // Show success notification
+    showNotification(
+      'Character Deleted',
+      `${characterName} has been deleted successfully`,
+      'success'
+    );
+
+    // Hide the card
+    hideCharacterCard();
+  } catch (error) {
+    console.error('Error deleting character:', error);
+    const errorMessage = handleAPIError(error);
+    showNotification(
+      'Error Deleting Character',
+      errorMessage,
+      'error'
+    );
+
+    // Re-enable delete button
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = 'Delete';
+    }
+  }
 }
 
 /**
