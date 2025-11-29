@@ -87,7 +87,7 @@ function setupEventListeners() {
   }
 
   // Tab buttons
-  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabButtons = document.querySelectorAll('.character-tab-button');
   tabButtons.forEach(button => {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   });
@@ -439,7 +439,7 @@ function handleImageUpload(e) {
  */
 function switchTab(tabName) {
   // Remove active class from all buttons and panels
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.character-tab-button').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
   // Add active class to clicked button and corresponding panel
