@@ -254,6 +254,7 @@ function loadPage(page, container) {
           <!-- Tabs Header -->
           <div class="tabs-header">
             <button class="character-tab-button active" data-tab="profile">Profile</button>
+            <button class="character-tab-button" data-tab="voice">Voice</button>
             <button class="character-tab-button" data-tab="background">Background</button>
             <button class="character-tab-button" data-tab="chats">Chats</button>
             <button class="character-tab-button" data-tab="groups">Groups</button>
@@ -301,6 +302,47 @@ function loadPage(page, container) {
                   <div class="form-group">
                     <label class="form-label">System Prompt</label>
                     <textarea class="form-textarea" id="character-system-prompt" placeholder="Enter system prompt"></textarea>
+                  </div>
+                </div>
+
+                <!-- Voice Tab -->
+                <div class="tab-panel" id="voice-panel">
+                  <div class="form-group">
+                    <label class="form-label">Method</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input type="radio" name="voice-method" value="clone" class="radio-input" id="voice-method-clone" checked>
+                        <span class="radio-text">Clone</span>
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" name="voice-method" value="profile" class="radio-input" id="voice-method-profile">
+                        <span class="radio-text">Profile</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Speaker Description</label>
+                    <textarea class="form-textarea" id="voice-speaker-description" placeholder="Describe the speaker's voice characteristics, tone, accent, and style..."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Scene Prompt</label>
+                    <textarea class="form-textarea" id="voice-scene-prompt" placeholder="Describe the scene or context for the voice generation..."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Audio Path</label>
+                    <input type="text" class="form-input single-line" id="voice-audio-path" placeholder="Enter audio file URL">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Text Path</label>
+                    <input type="text" class="form-input single-line" id="voice-text-path" placeholder="Enter text file URL">
+                  </div>
+
+                  <div class="form-group">
+                    <button class="btn btn-primary" id="create-voice-btn">Create Voice</button>
                   </div>
                 </div>
 
