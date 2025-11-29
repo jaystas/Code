@@ -584,6 +584,50 @@
   margin-bottom: 8px;
 }
 
+/* ===== Radio Button Group ===== */
+.radio-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  background: #2a2d35;
+  border: 1px solid #333;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.radio-label:hover {
+  background: #25272d;
+  border-color: #4a90e2;
+}
+
+.radio-label:has(input:checked) {
+  background: rgba(74, 144, 226, 0.15);
+  border-color: #4a90e2;
+}
+
+.radio-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4a90e2;
+}
+
+.radio-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e5e5e5;
+  user-select: none;
+}
+
 .form-input {
   width: 100%;
   padding: 10px 14px;
@@ -648,6 +692,30 @@
   outline: none;
   border-color: #4a90e2;
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* ===== Disabled State ===== */
+.form-input:disabled,
+.form-textarea:disabled,
+.form-input.disabled,
+.form-textarea.disabled {
+  background: #1f2127;
+  color: #606060;
+  border-color: #2a2d35;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-input:disabled::placeholder,
+.form-textarea:disabled::placeholder,
+.form-input.disabled::placeholder,
+.form-textarea.disabled::placeholder {
+  color: #505050;
+}
+
+/* ===== Single Line Input ===== */
+.form-input.single-line {
+  height: 44px;
 }
 
 /* ===== Card Footer ===== */

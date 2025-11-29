@@ -145,6 +145,20 @@ function setupEventListeners() {
       alert('Chat functionality will be implemented in the next phase');
     });
   }
+
+  // Voice tab - Method radio buttons
+  const cloneRadio = document.getElementById('voice-method-clone');
+  const profileRadio = document.getElementById('voice-method-profile');
+  if (cloneRadio && profileRadio) {
+    cloneRadio.addEventListener('change', handleVoiceMethodChange);
+    profileRadio.addEventListener('change', handleVoiceMethodChange);
+  }
+
+  // Create Voice button
+  const createVoiceBtn = document.getElementById('create-voice-btn');
+  if (createVoiceBtn) {
+    createVoiceBtn.addEventListener('click', handleCreateVoice);
+  }
 }
 
 /**
@@ -297,7 +311,14 @@ function showCharacterCard(isNew = false) {
       avatar: null,
       voice: '',
       globalPrompt: 'You are {character.name}, a roleplay actor engaging in a conversation with {user.name}. Your replies should be written in a conversational format, taking on the personality and characteristics of {character.name}.',
-      systemPrompt: ''
+      systemPrompt: '',
+      voiceData: {
+        method: 'clone',
+        speakerDescription: '',
+        scenePrompt: '',
+        audioPath: '',
+        textPath: ''
+      }
     };
     loadCharacterData(currentCharacter);
   }
@@ -401,6 +422,40 @@ function loadCharacterData(character) {
   if (voiceSelect) {
     voiceSelect.value = character.voice || '';
   }
+
+  // Voice tab data
+  if (character.voiceData) {
+    const cloneRadio = document.getElementById('voice-method-clone');
+    const profileRadio = document.getElementById('voice-method-profile');
+    const speakerDesc = document.getElementById('voice-speaker-description');
+    const scenePrompt = document.getElementById('voice-scene-prompt');
+    const audioPath = document.getElementById('voice-audio-path');
+    const textPath = document.getElementById('voice-text-path');
+
+    if (cloneRadio && profileRadio) {
+      if (character.voiceData.method === 'clone') {
+        cloneRadio.checked = true;
+      } else {
+        profileRadio.checked = true;
+      }
+    }
+
+    if (speakerDesc) {
+      speakerDesc.value = character.voiceData.speakerDescription || '';
+    }
+    if (scenePrompt) {
+      scenePrompt.value = character.voiceData.scenePrompt || '';
+    }
+    if (audioPath) {
+      audioPath.value = character.voiceData.audioPath || '';
+    }
+    if (textPath) {
+      textPath.value = character.voiceData.textPath || '';
+    }
+
+    // Update disabled states based on method
+    handleVoiceMethodChange();
+  }
 }
 
 /**
@@ -460,6 +515,77 @@ function switchTab(tabName) {
     imageSection?.classList.add('hidden');
     contentSection?.classList.add('full-width');
   }
+
+  // Initialize voice method state if switching to voice tab
+  if (tabName === 'voice') {
+    handleVoiceMethodChange();
+  }
+}
+
+/**
+ * Handle voice method change (Clone vs Profile)
+ */
+function handleVoiceMethodChange() {
+  const cloneRadio = document.getElementById('voice-method-clone');
+  const profileRadio = document.getElementById('voice-method-profile');
+  const speakerDesc = document.getElementById('voice-speaker-description');
+  const audioPath = document.getElementById('voice-audio-path');
+  const textPath = document.getElementById('voice-text-path');
+
+  if (!cloneRadio || !profileRadio || !speakerDesc || !audioPath || !textPath) {
+    return;
+  }
+
+  if (cloneRadio.checked) {
+    // Clone method: disable speaker description, enable audio and text paths
+    speakerDesc.disabled = true;
+    speakerDesc.classList.add('disabled');
+    audioPath.disabled = false;
+    audioPath.classList.remove('disabled');
+    textPath.disabled = false;
+    textPath.classList.remove('disabled');
+  } else if (profileRadio.checked) {
+    // Profile method: enable speaker description, disable audio and text paths
+    speakerDesc.disabled = false;
+    speakerDesc.classList.remove('disabled');
+    audioPath.disabled = true;
+    audioPath.classList.add('disabled');
+    textPath.disabled = true;
+    textPath.classList.add('disabled');
+  }
+}
+
+/**
+ * Handle Create Voice button click
+ */
+function handleCreateVoice() {
+  const cloneRadio = document.getElementById('voice-method-clone');
+  const speakerDesc = document.getElementById('voice-speaker-description');
+  const scenePrompt = document.getElementById('voice-scene-prompt');
+  const audioPath = document.getElementById('voice-audio-path');
+  const textPath = document.getElementById('voice-text-path');
+
+  if (!cloneRadio || !speakerDesc || !scenePrompt || !audioPath || !textPath) {
+    return;
+  }
+
+  const method = cloneRadio.checked ? 'clone' : 'profile';
+  const voiceData = {
+    method: method,
+    speakerDescription: speakerDesc.value,
+    scenePrompt: scenePrompt.value,
+    audioPath: audioPath.value,
+    textPath: textPath.value
+  };
+
+  console.log('Creating voice with data:', voiceData);
+
+  // TODO: Implement actual voice creation logic
+  showNotification(
+    'Voice Creation',
+    `Voice creation with ${method} method will be implemented soon`,
+    'success'
+  );
 }
 
 /**
@@ -477,11 +603,27 @@ function saveCharacter() {
   const systemPromptInput = document.getElementById('character-system-prompt');
   const voiceSelect = document.getElementById('character-voice');
 
+  // Get voice tab values
+  const cloneRadio = document.getElementById('voice-method-clone');
+  const speakerDesc = document.getElementById('voice-speaker-description');
+  const scenePrompt = document.getElementById('voice-scene-prompt');
+  const audioPath = document.getElementById('voice-audio-path');
+  const textPath = document.getElementById('voice-text-path');
+
   // Update character object
   currentCharacter.name = nameInput?.value || 'Character name';
   currentCharacter.globalPrompt = globalPromptInput?.value || '';
   currentCharacter.systemPrompt = systemPromptInput?.value || '';
   currentCharacter.voice = voiceSelect?.value || '';
+
+  // Update voice data
+  currentCharacter.voiceData = {
+    method: cloneRadio?.checked ? 'clone' : 'profile',
+    speakerDescription: speakerDesc?.value || '',
+    scenePrompt: scenePrompt?.value || '',
+    audioPath: audioPath?.value || '',
+    textPath: textPath?.value || ''
+  };
 
   // If this is a new character (no ID), generate one
   const isNewCharacter = !currentCharacter.id;
