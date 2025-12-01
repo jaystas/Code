@@ -170,8 +170,114 @@ function loadPage(page, container) {
 
       <!-- Settings Drawer (offscreen) -->
       <div class="settings-drawer" id="settings-drawer">
-        <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text);">Settings</h2>
-        <p style="color: var(--muted);">Settings content will go here...</p>
+        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text); font-weight: 600;">Model Settings</h2>
+
+        <!-- Model Selection -->
+        <div class="setting-group">
+          <label class="setting-label">Model</label>
+          <div class="model-dropdown" id="model-dropdown">
+            <button class="model-dropdown-trigger" id="model-dropdown-trigger">
+              <span id="selected-model-text">Loading models...</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <div class="model-dropdown-menu" id="model-dropdown-menu">
+              <!-- Models will be populated here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Temperature -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Temperature</label>
+            <span class="setting-value" id="temperature-value">1.0</span>
+          </div>
+          <input type="range" class="setting-slider" id="temperature-slider" min="0" max="2" step="0.1" value="1.0">
+          <div class="slider-labels">
+            <span>0</span>
+            <span>2</span>
+          </div>
+        </div>
+
+        <!-- Top P -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Top P</label>
+            <span class="setting-value" id="top-p-value">1.0</span>
+          </div>
+          <input type="range" class="setting-slider" id="top-p-slider" min="0" max="1" step="0.01" value="1.0">
+          <div class="slider-labels">
+            <span>0</span>
+            <span>1</span>
+          </div>
+        </div>
+
+        <!-- Min P -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Min P</label>
+            <span class="setting-value" id="min-p-value">0.0</span>
+          </div>
+          <input type="range" class="setting-slider" id="min-p-slider" min="0" max="1" step="0.01" value="0.0">
+          <div class="slider-labels">
+            <span>0</span>
+            <span>1</span>
+          </div>
+        </div>
+
+        <!-- Top K -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Top K</label>
+            <span class="setting-value" id="top-k-value">0</span>
+          </div>
+          <input type="range" class="setting-slider" id="top-k-slider" min="0" max="100" step="1" value="0">
+          <div class="slider-labels">
+            <span>0</span>
+            <span>100</span>
+          </div>
+        </div>
+
+        <!-- Frequency Penalty -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Frequency Penalty</label>
+            <span class="setting-value" id="frequency-penalty-value">0.0</span>
+          </div>
+          <input type="range" class="setting-slider" id="frequency-penalty-slider" min="-2" max="2" step="0.1" value="0.0">
+          <div class="slider-labels">
+            <span>-2</span>
+            <span>2</span>
+          </div>
+        </div>
+
+        <!-- Presence Penalty -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Presence Penalty</label>
+            <span class="setting-value" id="presence-penalty-value">0.0</span>
+          </div>
+          <input type="range" class="setting-slider" id="presence-penalty-slider" min="-2" max="2" step="0.1" value="0.0">
+          <div class="slider-labels">
+            <span>-2</span>
+            <span>2</span>
+          </div>
+        </div>
+
+        <!-- Repetition Penalty -->
+        <div class="setting-group">
+          <div class="setting-header">
+            <label class="setting-label">Repetition Penalty</label>
+            <span class="setting-value" id="repetition-penalty-value">1.0</span>
+          </div>
+          <input type="range" class="setting-slider" id="repetition-penalty-slider" min="0.1" max="2" step="0.1" value="1.0">
+          <div class="slider-labels">
+            <span>0.1</span>
+            <span>2</span>
+          </div>
+        </div>
       </div>
     `,
     models: `
@@ -481,6 +587,217 @@ function initDrawer() {
     } else {
       drawer.classList.add('open');
       drawerToggle.classList.add('active');
+    }
+  });
+
+  // Initialize model settings
+  initModelSettings();
+}
+
+/**
+ * Format model ID for display
+ * @param {string} modelId - Model ID (e.g., "openai/gpt-4")
+ * @returns {string} Formatted model name (e.g., "OpenAI / GPT-4")
+ */
+function formatModelName(modelId) {
+  const parts = modelId.split('/');
+  return parts.map(part => {
+    // Capitalize first letter of each word
+    return part.split('-').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  }).join(' / ');
+}
+
+/**
+ * Fetch OpenRouter models
+ * @returns {Promise<Array>} Array of model objects
+ */
+async function fetchOpenRouterModels() {
+  try {
+    // Note: In production, you should use a proper API key from environment or settings
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer YOUR_API_KEY_HERE',
+      },
+    });
+
+    const data = await response.json();
+
+    // Extract and sort models by ID
+    const models = data.data || [];
+    return models.sort((a, b) => {
+      const nameA = formatModelName(a.id).toLowerCase();
+      const nameB = formatModelName(b.id).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  } catch (error) {
+    console.error('Error fetching OpenRouter models:', error);
+    return [];
+  }
+}
+
+/**
+ * Initialize model settings (dropdown and sliders)
+ */
+async function initModelSettings() {
+  // Load saved settings
+  loadSettings();
+
+  // Initialize model dropdown
+  await initModelDropdown();
+
+  // Initialize sliders
+  initSliders();
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('model-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('active');
+    }
+  });
+}
+
+/**
+ * Initialize model dropdown
+ */
+async function initModelDropdown() {
+  const dropdownTrigger = document.getElementById('model-dropdown-trigger');
+  const dropdownMenu = document.getElementById('model-dropdown-menu');
+  const dropdown = document.getElementById('model-dropdown');
+  const selectedModelText = document.getElementById('selected-model-text');
+
+  if (!dropdownTrigger || !dropdownMenu || !dropdown) {
+    return;
+  }
+
+  // Toggle dropdown
+  dropdownTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('active');
+  });
+
+  // Fetch and populate models
+  selectedModelText.textContent = 'Loading models...';
+  const models = await fetchOpenRouterModels();
+
+  if (models.length === 0) {
+    selectedModelText.textContent = 'Failed to load models';
+    dropdownMenu.innerHTML = '<div class="model-dropdown-item" style="color: var(--muted); cursor: default;">Failed to load models</div>';
+    return;
+  }
+
+  // Populate dropdown
+  dropdownMenu.innerHTML = models.map(model => `
+    <div class="model-dropdown-item" data-model-id="${model.id}">
+      ${formatModelName(model.id)}
+    </div>
+  `).join('');
+
+  // Set initial selection
+  const savedModel = localStorage.getItem('selectedModel') || models[0].id;
+  selectedModelText.textContent = formatModelName(savedModel);
+
+  // Add click handlers to model items
+  const modelItems = dropdownMenu.querySelectorAll('.model-dropdown-item');
+  modelItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const modelId = item.getAttribute('data-model-id');
+      selectedModelText.textContent = formatModelName(modelId);
+      localStorage.setItem('selectedModel', modelId);
+
+      // Remove active class from all items
+      modelItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      dropdown.classList.remove('active');
+    });
+
+    // Highlight saved model
+    if (item.getAttribute('data-model-id') === savedModel) {
+      item.classList.add('active');
+    }
+  });
+}
+
+/**
+ * Initialize all sliders
+ */
+function initSliders() {
+  const sliders = [
+    { id: 'temperature', default: 1.0 },
+    { id: 'top-p', default: 1.0 },
+    { id: 'min-p', default: 0.0 },
+    { id: 'top-k', default: 0 },
+    { id: 'frequency-penalty', default: 0.0 },
+    { id: 'presence-penalty', default: 0.0 },
+    { id: 'repetition-penalty', default: 1.0 },
+  ];
+
+  sliders.forEach(({ id, default: defaultValue }) => {
+    const slider = document.getElementById(`${id}-slider`);
+    const valueDisplay = document.getElementById(`${id}-value`);
+
+    if (!slider || !valueDisplay) return;
+
+    // Update display when slider changes
+    slider.addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      valueDisplay.textContent = id === 'top-k' ? value.toString() : value.toFixed(2);
+      saveSettings();
+    });
+  });
+}
+
+/**
+ * Load settings from localStorage
+ */
+function loadSettings() {
+  const sliders = [
+    'temperature',
+    'top-p',
+    'min-p',
+    'top-k',
+    'frequency-penalty',
+    'presence-penalty',
+    'repetition-penalty',
+  ];
+
+  sliders.forEach(id => {
+    const savedValue = localStorage.getItem(id);
+    if (savedValue !== null) {
+      const slider = document.getElementById(`${id}-slider`);
+      const valueDisplay = document.getElementById(`${id}-value`);
+
+      if (slider && valueDisplay) {
+        slider.value = savedValue;
+        const value = parseFloat(savedValue);
+        valueDisplay.textContent = id === 'top-k' ? value.toString() : value.toFixed(2);
+      }
+    }
+  });
+}
+
+/**
+ * Save settings to localStorage
+ */
+function saveSettings() {
+  const sliders = [
+    'temperature',
+    'top-p',
+    'min-p',
+    'top-k',
+    'frequency-penalty',
+    'presence-penalty',
+    'repetition-penalty',
+  ];
+
+  sliders.forEach(id => {
+    const slider = document.getElementById(`${id}-slider`);
+    if (slider) {
+      localStorage.setItem(id, slider.value);
     }
   });
 }
