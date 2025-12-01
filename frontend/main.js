@@ -194,7 +194,7 @@ function loadPage(page, container) {
             <label class="setting-label">Temperature</label>
             <span class="setting-value" id="temperature-value">1.0</span>
           </div>
-          <input type="range" class="setting-slider" id="temperature-slider" min="0" max="2" step="0.1" value="1.0">
+          <input type="range" class="setting-slider" id="temperature-slider" min="0" max="2" step="0.01" value="1.0">
           <div class="slider-labels">
             <span>0</span>
             <span>2</span>
