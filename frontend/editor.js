@@ -12,9 +12,6 @@ import TextAlign from 'https://esm.sh/@tiptap/extension-text-align';
 import Highlight from 'https://esm.sh/@tiptap/extension-highlight';
 import Image from 'https://esm.sh/@tiptap/extension-image';
 
-// Import chat manager for sending messages
-import { sendMessage } from './chat.js';
-
 let editor = null;
 
 /**
@@ -389,21 +386,14 @@ export function handleSend() {
     return;
   }
 
-  // Get plain text content (not HTML)
-  const content = editor.getText().trim();
+  const content = editor.getHTML();
+  console.log('Sending content:', content);
 
-  if (!content) {
-    console.log('No content to send');
-    return;
-  }
+  // TODO: Send to backend API
+  // This will be implemented when integrating with FastAPI backend
 
-  console.log('Sending message:', content);
-
-  // Send via chat manager (WebSocket)
-  sendMessage(content);
-
-  // Clear the editor after sending
-  editor.commands.clearContent();
+  // Optionally clear the editor after sending
+  // editor.commands.clearContent();
 }
 
 /**

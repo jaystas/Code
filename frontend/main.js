@@ -9,10 +9,6 @@ import { initEditor, handleMic, handleSend } from './editor.js';
 // Import characters functions
 import { initCharacters } from './characters.js';
 
-// Import conversations and chat functions
-import { initConversations } from './conversations.js';
-import { initChat } from './chat.js';
-
 // Make functions globally accessible for inline event handlers
 window.handleMic = handleMic;
 window.handleSend = handleSend;
@@ -584,13 +580,10 @@ function loadPage(page, container) {
     // Initialize editor if on home page
     if (page === 'home') {
       // Wait a bit for DOM to be ready
-      setTimeout(async () => {
+      setTimeout(() => {
         initEditor();
         initDrawer();
         initInfoDrawer();
-
-        // Initialize conversations and chat
-        await initConversationsAndChat();
       }, 100);
     }
 
@@ -871,21 +864,4 @@ function saveSettings() {
       localStorage.setItem(id, slider.value);
     }
   });
-}
-
-/**
- * Initialize conversations and chat
- */
-async function initConversationsAndChat() {
-  try {
-    // Initialize conversations (info drawer)
-    await initConversations();
-
-    // Initialize chat system
-    await initChat();
-
-    console.log('Conversations and chat initialized');
-  } catch (error) {
-    console.error('Error initializing conversations/chat:', error);
-  }
 }
