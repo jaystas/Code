@@ -82,7 +82,7 @@ class ConversationManager:
             conversation = Conversation(
                 conversation_id=str(row["conversation_id"]),
                 title=row.get("title"),
-                active_characters=row.get("active_characters", []),
+                active_characters=row.get("active_characters") or [],
                 created_at=row.get("created_at"),
                 updated_at=row.get("updated_at")
             )
@@ -111,7 +111,7 @@ class ConversationManager:
             conversation = Conversation(
                 conversation_id=str(row["conversation_id"]),
                 title=row.get("title"),
-                active_characters=row.get("active_characters", []),
+                active_characters=row.get("active_characters") or [],
                 created_at=row.get("created_at"),
                 updated_at=row.get("updated_at")
             )
@@ -149,7 +149,7 @@ class ConversationManager:
                 conversation = Conversation(
                     conversation_id=str(row["conversation_id"]),
                     title=row.get("title"),
-                    active_characters=row.get("active_characters", []),
+                    active_characters=row.get("active_characters") or [],
                     created_at=row.get("created_at"),
                     updated_at=row.get("updated_at")
                 )
