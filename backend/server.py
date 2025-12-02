@@ -1347,7 +1347,7 @@ class VoiceChatOrchestrator:
             await self.stop_services()
 
     async def _receive_audio(self, websocket: WebSocket):
-        """Receive audio from browser and queue for STT"""
+        """Receive audio and text messages from browser"""
         while True:
             try:
                 data = await websocket.receive()
@@ -1362,10 +1362,41 @@ class VoiceChatOrchestrator:
                     await self.queues.audio_input.put(audio_chunk)
 
                 elif "text" in data:
-                    # Control messages (e.g., stop, interrupt)
+                    # JSON messages (control messages, text input)
                     message = json.loads(data["text"])
+
                     if message.get("type") == "interrupt":
+                        # Interrupt current generation
                         await self.queues.interrupt()
+
+                    elif message.get("type") == "user_message":
+                        # Text message from user (bypass STT)
+                        content = message.get("content", "")
+
+                        # Extract model parameters (for future backend use)
+                        # TODO: Backend will use these in future LLM refactor
+                        model_params = {
+                            "model": message.get("model"),
+                            "temperature": message.get("temperature"),
+                            "top_p": message.get("top_p"),
+                            "min_p": message.get("min_p"),
+                            "top_k": message.get("top_k"),
+                            "frequency_penalty": message.get("frequency_penalty"),
+                            "presence_penalty": message.get("presence_penalty"),
+                            "repetition_penalty": message.get("repetition_penalty")
+                        }
+
+                        # Log received parameters (for debugging)
+                        print(f"Received user_message with model params: {model_params}")
+
+                        # Create transcription directly (bypass STT)
+                        transcription = Transcription(
+                            text=content,
+                            is_final=True,
+                            context=self.context,
+                            timestamp=time.time()
+                        )
+                        await self.queues.transcription.put(transcription)
 
             except Exception as e:
                 print(f"Receive error: {e}")
