@@ -163,12 +163,35 @@ function loadPage(page, container) {
         </div>
       </div>
 
-      <!-- Settings Drawer Toggle Button -->
-      <button class="drawer-toggle" id="drawer-toggle">
-        <img class="arrow-left" src="assets/left-arrow.png" alt="arrow-compact" />
+      <!-- Info Drawer Toggle Button (Left) -->
+      <button class="info-drawer-toggle" id="info-drawer-toggle">
+        <img class="right-arrow" src="assets/arrow-right.png" alt="arrow-compact" />
       </button>
 
-      <!-- Settings Drawer (offscreen) -->
+      <!-- Info Drawer (Left Side) -->
+      <div class="info-drawer" id="info-drawer">
+        <div class="info-drawer-header">
+          <h2>Info Panel</h2>
+        </div>
+        <div class="info-drawer-content">
+          <!-- Your info drawer content goes here -->
+          <div class="info-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <p>This panel can display additional context, character info, conversation history, or any other relevant information.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Drawer Toggle Button (Right) -->
+      <button class="drawer-toggle" id="drawer-toggle">
+        <img class="left-arrow" src="assets/arrow-left.png" alt="arrow-compact" />
+      </button>
+
+      <!-- Settings Drawer (Right Side) -->
       <div class="settings-drawer" id="settings-drawer">
         <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text); font-weight: 600;">Model Settings</h2>
 
@@ -272,26 +295,29 @@ function loadPage(page, container) {
             <label class="setting-label">Repetition Penalty</label>
             <span class="setting-value" id="repetition-penalty-value">1.0</span>
           </div>
-          <input type="range" class="setting-slider" id="repetition-penalty-slider" min="0.1" max="2" step="0.1" value="1.0">
+          <input type="range" class="setting-slider" id="repetition-penalty-slider" min="0" max="2" step="0.01" value="1.0">
           <div class="slider-labels">
-            <span>0.1</span>
+            <span>0</span>
             <span>2</span>
           </div>
         </div>
       </div>
     `,
+
     models: `
       <div class="page-content" style="display: block;">
         <h1>Models</h1>
-        <p>Manage your AI models here</p>
+        <p>Configure and manage your AI models here.</p>
       </div>
     `,
+
     chats: `
       <div class="page-content" style="display: block;">
         <h1>Chats</h1>
-        <p>View and manage your chat history</p>
+        <p>View and manage your chat history.</p>
       </div>
     `,
+
     characters: `
       <div class="characters-page">
         <!-- Character List Column -->
@@ -513,30 +539,33 @@ function loadPage(page, container) {
         </div>
       </div>
     `,
+
     agents: `
       <div class="page-content" style="display: block;">
         <h1>Agents</h1>
-        <p>Configure your AI agents</p>
+        <p>Configure autonomous AI agents.</p>
       </div>
     `,
+
     speech: `
       <div class="page-content" style="display: block;">
         <h1>Speech</h1>
-        <p>Voice and speech settings</p>
+        <p>Configure text-to-speech and speech-to-text settings.</p>
       </div>
     `,
+
     settings: `
       <div class="page-content" style="display: block;">
         <h1>Settings</h1>
-        <p>Application settings and preferences</p>
+        <p>Configure your application preferences.</p>
       </div>
-    `
+    `,
   };
 
-  // Get content or show error
+  // Get the content for the requested page
   const content = pageContent[page] || `
-    <div class="page-content">
-      <h1>Page Not Found</h1>
+    <div class="page-content" style="display: block;">
+      <h1>404 - Page Not Found</h1>
       <p>The page "${page}" could not be found.</p>
     </div>
   `;
@@ -554,6 +583,7 @@ function loadPage(page, container) {
       setTimeout(() => {
         initEditor();
         initDrawer();
+        initInfoDrawer();
       }, 100);
     }
 
@@ -567,7 +597,7 @@ function loadPage(page, container) {
 }
 
 /**
- * Initialize settings drawer functionality
+ * Initialize settings drawer functionality (right side)
  */
 function initDrawer() {
   const drawerToggle = document.getElementById('drawer-toggle');
@@ -592,6 +622,40 @@ function initDrawer() {
 
   // Initialize model settings
   initModelSettings();
+}
+
+/**
+ * Initialize info drawer functionality (left side)
+ */
+function initInfoDrawer() {
+  const drawerToggle = document.getElementById('info-drawer-toggle');
+  const drawer = document.getElementById('info-drawer');
+
+  if (!drawerToggle || !drawer) {
+    return;
+  }
+
+  // Load saved state from localStorage
+  const drawerState = localStorage.getItem('infoDrawerOpen');
+  if (drawerState === 'true') {
+    drawer.classList.add('open');
+    drawerToggle.classList.add('active');
+  }
+
+  // Toggle drawer on button click
+  drawerToggle.addEventListener('click', () => {
+    const isOpen = drawer.classList.contains('open');
+
+    if (isOpen) {
+      drawer.classList.remove('open');
+      drawerToggle.classList.remove('active');
+      localStorage.setItem('infoDrawerOpen', 'false');
+    } else {
+      drawer.classList.add('open');
+      drawerToggle.classList.add('active');
+      localStorage.setItem('infoDrawerOpen', 'true');
+    }
+  });
 }
 
 /**
